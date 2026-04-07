@@ -60,7 +60,9 @@
     <div class="aeon-gradient h-[350px] relative text-white flex items-end pb-10">
         <div class="max-w-7xl mx-auto px-4 w-full flex items-center space-x-6">
             <div class="bg-white p-4 rounded shadow-lg w-32 h-32 flex items-center justify-center">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Aeon_logo.svg/1200px-Aeon_logo.svg.png" alt="AEON Logo" class="w-full">
+                <img src="{{ asset('images/aeon-logo.png') }}" 
+                                         class="w-full h-full object-contain opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all" 
+                                         alt="AEON">
             </div>
             
             <div class="space-y-2">

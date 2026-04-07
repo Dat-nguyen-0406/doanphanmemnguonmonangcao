@@ -20,11 +20,12 @@ class IsAdmin
     }
 
     // 2. Kiểm tra xem có đúng là Admin (role = 1) không
-    if (Auth::user()->role !== 1) {
-        Auth::logout(); // Đăng xuất luôn nếu định "leo lề"
-        return redirect()->route('admin.login')->with('error', 'Tài khoản này không có quyền quản trị.');
+    if (Auth::check() && Auth::user()->role >= 1) {
+        return $next($request);
     }
 
-    return $next($request);
+    return redirect()->route('admin.login')->with('error', 'Bạn phải là quản trị viên để vào trang này.');
+
+    
 }
 }
