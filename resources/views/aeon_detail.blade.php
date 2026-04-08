@@ -60,13 +60,9 @@
     <div class="aeon-gradient h-[350px] relative text-white flex items-end pb-10">
         <div class="max-w-7xl mx-auto px-4 w-full flex items-center space-x-6">
             <div class="bg-white p-4 rounded shadow-lg w-32 h-32 flex items-center justify-center">
-<<<<<<< HEAD
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Aeon_logo.svg/1200px-Aeon_logo.svg.png" alt="AEON Logo" class="w-full">
-=======
                 <img src="{{ asset('images/aeon-logo.png') }}" 
                                          class="w-full h-full object-contain opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all" 
                                          alt="AEON">
->>>>>>> e40775fcf1b0a505908437551a343569c8430488
             </div>
             
             <div class="space-y-2">
@@ -93,13 +89,13 @@
             <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-[#a61d6d]">
                 <h3 class="font-bold text-xl mb-2">🍴 Đặt bàn nhà hàng</h3>
                 <p class="text-gray-600 text-sm mb-4">Khám phá khu ẩm thực và đặt chỗ trước để không phải chờ đợi.</p>
-                <button class="bg-[#a61d6d] text-white px-4 py-2 rounded text-sm font-bold w-full">KHÁM PHÁ</button>
+                <a href="{{ route('restaurants.index') }}" class="block text-center bg-[#a61d6d] text-white px-4 py-2 rounded text-sm font-bold w-full hover:bg-pink-800 transition">KHÁM PHÁ</a>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-[#a61d6d]">
                 <h3 class="font-bold text-xl mb-2">🛍️ Mua sắm trực tuyến</h3>
                 <p class="text-gray-600 text-sm mb-4">Hàng ngàn sản phẩm từ AEON Supermarket đang chờ bạn.</p>
-                <a href="{{ route('shop.index') }}" class="block text-center border border-[#a61d6d] text-[#a61d6d] px-4 py-2 rounded text-sm font-bold w-full hover:bg-pink-50 transition">ĐI CHỢ NGAY</a>
+                <a href="{{ route('restaurants.index') }}" class="block text-center border border-[#a61d6d] text-[#a61d6d] px-4 py-2 rounded text-sm font-bold w-full hover:bg-pink-50 transition">ĐI CHỢ NGAY</a>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-[#a61d6d]">
