@@ -28,6 +28,18 @@ class DatabaseSeeder extends Seeder
                 'role' => 1, // QUAN TRỌNG: Gán quyền Admin (role = 1)
             ]
         );
+
+        User::updateOrCreate(
+            ['email' => 'xcbvdasfxc@gmail.com'], // Kiểm tra nếu email này chưa có thì mới tạo
+            [
+                'name' => 'User Thường', // Tên người dùng bình thường
+                'password' => Hash::make('12345678'), // Đặt mật khẩu mặc định
+                'phone' => '0123456788',
+                'address' => 'Cà Mau',
+                'role' => 0, // QUAN TRỌNG: Gán quyền User bình thường (role = 0)
+            ]
+        );
+
         $hanoi = \App\Models\City::firstOrCreate(
             ['slug' => 'ha-noi'],
             ['name' => 'Hà Nội']
