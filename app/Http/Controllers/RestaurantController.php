@@ -7,6 +7,7 @@ use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use App\Models\RestaurantBooking;
 
 class RestaurantController extends Controller
@@ -100,7 +101,7 @@ class RestaurantController extends Controller
                 'note' => $request->note,
                 'status' => 'pending',
                 'deposit_amount' => 100000,
-                'transaction_id' => 'TXN' . time() // Tạo mã giao dịch ngẫu nhiên
+                'transaction_id' => 'TXN-' . Str::uuid() // Tạo mã giao dịch duy nhất
             ]);
 
             // LƯU VÀO DATABASE
