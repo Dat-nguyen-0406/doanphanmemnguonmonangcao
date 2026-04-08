@@ -10,11 +10,11 @@ class Branch extends Model
     use HasFactory;
 
     protected $fillable = [
-        'city_id', 
-        'name', 
-        'address', 
-        'image_url', 
-        'map_link', 
+        'city_id',
+        'name',
+        'address',
+        'image_url',
+        'map_link',
         'description'
     ];
 
@@ -24,5 +24,10 @@ class Branch extends Model
     public function city()
     {
         return $this->belongsTo(City::class);
+    }
+
+    public function restaurants()
+    {
+        return $this->hasMany(Restaurant::class);
     }
 }

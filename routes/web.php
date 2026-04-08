@@ -1,7 +1,9 @@
 <?php
+
 use App\Http\Controllers\AeonController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RestaurantController;
 
 // Trang chủ
 Route::get('/', [AeonController::class, 'index'])->name('home');
@@ -16,6 +18,10 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
+
+// nha hang
+Route::get('/restaurants', [RestaurantController::class, 'index'])->name('restaurants.index');
+Route::get('/restaurants/{id}/book', [App\Http\Controllers\RestaurantController::class, 'showBookForm'])->name('restaurants.book');
 
 
 
@@ -37,7 +43,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Nhóm các Route dành riêng cho Admin
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
-    
+
     Route::get('/dashboard', function () {
         return "Chào mừng Admin Đạt đến với hệ thống AEON!";
     })->name('admin.dashboard');

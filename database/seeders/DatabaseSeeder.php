@@ -13,20 +13,20 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      */
-   // database/seeders/DatabaseSeeder.php
-public function run(): void
-{
-    $hanoi = \App\Models\City::create(['name' => 'Hà Nội', 'slug' => 'ha-noi']);
-    
-    $hanoi->branches()->create([
-        'name' => 'AEON Mall Long Biên',
-        'address' => 'Số 27 đường Cổ Linh, P. Long Biên, Q. Long Biên, Hà Nội',
-        'map_link' => 'https://goo.gl/maps/...'
-    ]);
+    // database/seeders/DatabaseSeeder.php
+    public function run(): void
+    {
+        $hanoi = \App\Models\City::create(['name' => 'Hà Nội', 'slug' => 'ha-noi']);
 
-    $hanoi->branches()->create([
-        'name' => 'AEON Mall Hà Đông',
-        'address' => 'Phường Dương Nội, Quận Hà Đông, Hà Nội',
-    ]);
-}
+        $hanoi->branches()->create([
+            'name' => 'AEON Mall Long Biên',
+            'address' => 'Số 27 đường Cổ Linh, P. Long Biên, Q. Long Biên, Hà Nội',
+            'map_link' => 'https://goo.gl/maps/...'
+        ]);
+
+        $hanoi->branches()->create([
+            'name' => 'AEON Mall Hà Đông',
+            'address' => 'Phường Dương Nội, Quận Hà Đông, Hà Nội',
+        ]);
+    }
 }
