@@ -124,16 +124,24 @@ class RestaurantController extends Controller
     // 2. Xử lý khi bấm nút "Đã thanh toán"
     public function processPayment($id)
     {
-        $booking = RestaurantBooking::findOrFail($id);
+        $bookingId = DB::transaction(function () use ($id) {
+            $booking = RestaurantBooking::findOrFail($id);
 
-        // Đổi trạng thái từ pending -> confirmed
-        if ($booking->status === 'pending') {
-            $booking->update(['status' => 'confirmed']);
-        }
+            if (!Auth::check() || (int) $booking->user_id !== (int) Auth::id()) {
+                abort(403, 'Bạn không có quyền xác nhận đặt bàn này.');
+            }
+
+            // Đổi trạng thái từ pending -> confirmed
+            if ($booking->status === 'pending') {
+                $booking->update(['status' => 'confirmed']);
+            }
+
+            return $booking->id;
+        });
 
         // Tích hợp Gửi Email (Module 4.2) sẽ viết ở đây sau
 
-        return redirect()->route('booking.success', $booking->id);
+        return redirect()->route('booking.success', $bookingId);
     }
 
     // 3. Hiển thị trang Hóa đơn thành công
