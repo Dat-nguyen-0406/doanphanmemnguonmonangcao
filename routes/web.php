@@ -26,9 +26,11 @@ Route::get('/restaurants/{id}/book', [App\Http\Controllers\RestaurantController:
 Route::post('/restaurants/{id}/book', [App\Http\Controllers\RestaurantController::class, 'submitBooking'])->name('restaurants.book.submit');
 
 // Luồng Thanh toán và Thành công
-Route::get('/booking/payment/{id}', [App\Http\Controllers\RestaurantController::class, 'showPayment'])->name('booking.payment');
-Route::post('/booking/payment/{id}/process', [App\Http\Controllers\RestaurantController::class, 'processPayment'])->name('booking.payment.process');
-Route::get('/booking/success/{id}', [App\Http\Controllers\RestaurantController::class, 'showSuccess'])->name('booking.success');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/booking/payment/{id}', [App\Http\Controllers\RestaurantController::class, 'showPayment'])->name('booking.payment');
+    Route::post('/booking/payment/{id}/process', [App\Http\Controllers\RestaurantController::class, 'processPayment'])->name('booking.payment.process');
+    Route::get('/booking/success/{id}', [App\Http\Controllers\RestaurantController::class, 'showSuccess'])->name('booking.success');
+});
 
 // --- LUỒNG QUẢN TRỊ (ADMIN) ---
 // Đăng nhập Admin
