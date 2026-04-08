@@ -12,12 +12,22 @@ class RestaurantSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\Restaurant::create([
-            'branch_id' => 1,
-            'name' => 'Kichi Kichi Aeon',
-            'cuisine_type' => 'Lẩu băng chuyền',
-            'description' => 'Nhà hàng lẩu băng chuyền phong cách Nhật Bản.',
-            'image_url' => 'https://example.com/kichi.jpg'
-        ]);
+        $branchId = \App\Models\Branch::query()
+            ->where('name', 'Aeon')
+            ->value('id');
+
+        if ($branchId === null) {
+            return;
+        }
+
+        \App\Models\Restaurant::updateOrCreate(
+            ['name' => 'Kichi Kichi Aeon'],
+            [
+                'branch_id' => $branchId,
+                'cuisine_type' => 'Lẩu băng chuyền',
+                'description' => 'Nhà hàng lẩu băng chuyền phong cách Nhật Bản.',
+                'image_url' => 'https://example.com/kichi.jpg'
+            ]
+        );
     }
 }
