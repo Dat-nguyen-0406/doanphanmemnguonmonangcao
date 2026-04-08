@@ -12,10 +12,14 @@
             <p><strong>Số tiền cần thanh toán:</strong> <span class="text-2xl text-red-600 font-bold block mt-2" style="color: #e50050; font-size: 24px; font-weight: bold;">{{ number_format($booking->deposit_amount) }} VNĐ</span></p>
         </div>
 
-        <form action="{{ route('booking.payment.process', $booking->id) }}" method="POST">
+
+
+
+        <!-- Thanh toan bang vNpay -->
+        <form action="{{ route('booking.vnpay.process', $booking->id) }}" method="POST">
             @csrf
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors" style="width: 100%; background: #2563eb; color: white; padding: 15px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer;">
-                💳 Xác nhận Đã Thanh Toán
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors" style="width: 100%; background: #005baa; color: white; padding: 15px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer;">
+                Thanh toán qua VNPAY
             </button>
         </form>
     </div>

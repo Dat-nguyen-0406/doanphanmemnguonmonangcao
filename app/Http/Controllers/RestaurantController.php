@@ -122,26 +122,139 @@ class RestaurantController extends Controller
     }
 
     // 2. Xử lý khi bấm nút "Đã thanh toán"
-    public function processPayment($id)
+    // public function processPayment($id)
+    // {
+    //     $bookingId = DB::transaction(function () use ($id) {
+    //         $booking = RestaurantBooking::findOrFail($id);
+
+    //         if (!Auth::check() || (int) $booking->user_id !== (int) Auth::id()) {
+    //             abort(403, 'Bạn không có quyền xác nhận đặt bàn này.');
+    //         }
+
+    //         // Đổi trạng thái từ pending -> confirmed
+    //         if ($booking->status === 'pending') {
+    //             $booking->update(['status' => 'confirmed']);
+    //         }
+
+    //         return $booking->id;
+    //     });
+
+    //     // Tích hợp Gửi Email (Module 4.2) sẽ viết ở đây sau
+
+    //     return redirect()->route('booking.success', $bookingId);
+    // }
+
+    // Hàm 1: Tạo URL và chuyển hướng sang VNPAY
+    public function processVnPay(Request $request, $id)
     {
-        $bookingId = DB::transaction(function () use ($id) {
-            $booking = RestaurantBooking::findOrFail($id);
+        $booking = RestaurantBooking::findOrFail($id);
 
-            if (!Auth::check() || (int) $booking->user_id !== (int) Auth::id()) {
-                abort(403, 'Bạn không có quyền xác nhận đặt bàn này.');
+        // Lấy config từ .env
+        $vnp_Url = env('VNPAY_URL');
+        $vnp_Returnurl = env('VNPAY_RETURN_URL');
+        $vnp_TmnCode = env('VNPAY_TMN_CODE');
+        $vnp_HashSecret = env('VNPAY_HASH_SECRET');
+
+        $vnp_TxnRef = $booking->transaction_id; // Mã tham chiếu (mã đơn)
+        $vnp_OrderInfo = "Thanh toan coc dat ban don: " . $vnp_TxnRef;
+        $vnp_OrderType = 'billpayment';
+        $vnp_Amount = $booking->deposit_amount * 100; // VNPAY yêu cầu số tiền nhân 100
+        $vnp_Locale = 'vn';
+        $vnp_BankCode = 'NCB'; // Dùng mặc định NCB để test Sandbox
+        $vnp_IpAddr = $request->ip();
+
+        // Cấu trúc mảng dữ liệu gửi đi
+        $inputData = array(
+            "vnp_Version" => "2.1.0",
+            "vnp_TmnCode" => $vnp_TmnCode,
+            "vnp_Amount" => $vnp_Amount,
+            "vnp_Command" => "pay",
+            "vnp_CreateDate" => date('YmdHis'),
+            "vnp_CurrCode" => "VND",
+            "vnp_IpAddr" => $vnp_IpAddr,
+            "vnp_Locale" => $vnp_Locale,
+            "vnp_OrderInfo" => $vnp_OrderInfo,
+            "vnp_OrderType" => $vnp_OrderType,
+            "vnp_ReturnUrl" => $vnp_Returnurl,
+            "vnp_TxnRef" => $vnp_TxnRef,
+        );
+
+        if (isset($vnp_BankCode) && $vnp_BankCode != "") {
+            $inputData['vnp_BankCode'] = $vnp_BankCode;
+        }
+
+        // Sinh chữ ký bảo mật (Checksum/Hash)
+        ksort($inputData);
+        $query = "";
+        $i = 0;
+        $hashdata = "";
+        foreach ($inputData as $key => $value) {
+            if ($i == 1) {
+                $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
+            } else {
+                $hashdata .= urlencode($key) . "=" . urlencode($value);
+                $i = 1;
             }
+            $query .= urlencode($key) . "=" . urlencode($value) . '&';
+        }
 
-            // Đổi trạng thái từ pending -> confirmed
-            if ($booking->status === 'pending') {
-                $booking->update(['status' => 'confirmed']);
+        $vnp_Url = $vnp_Url . "?" . $query;
+        if (isset($vnp_HashSecret)) {
+            $vnpSecureHash =   hash_hmac('sha512', $hashdata, $vnp_HashSecret);
+            $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+        }
+
+        // Redirect khách sang trang thanh toán của VNPAY
+        return redirect($vnp_Url);
+    }
+
+    // Hàm 2: Hứng kết quả VNPAY trả về
+    public function vnpayReturn(Request $request)
+    {
+        $vnp_HashSecret = env('VNPAY_HASH_SECRET');
+        $inputData = array();
+        
+        foreach ($request->all() as $key => $value) {
+            if (substr($key, 0, 4) == "vnp_") {
+                $inputData[$key] = $value;
             }
+        }
 
-            return $booking->id;
-        });
+        $vnp_SecureHash = $inputData['vnp_SecureHash'];
+        unset($inputData['vnp_SecureHash']);
+        unset($inputData['vnp_SecureHashType']);
+        ksort($inputData);
+        
+        $i = 0;
+        $hashData = "";
+        foreach ($inputData as $key => $value) {
+            if ($i == 1) {
+                $hashData = $hashData . '&' . urlencode($key) . "=" . urlencode($value);
+            } else {
+                $hashData = $hashData . urlencode($key) . "=" . urlencode($value);
+                $i = 1;
+            }
+        }
 
-        // Tích hợp Gửi Email (Module 4.2) sẽ viết ở đây sau
-
-        return redirect()->route('booking.success', $bookingId);
+        // Kiểm tra chữ ký xem có bị giả mạo không
+        $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
+        if ($secureHash == $vnp_SecureHash) {
+            // Kiểm tra mã phản hồi (00 là thành công)
+            if ($request->vnp_ResponseCode == '00') {
+                $booking = RestaurantBooking::where('transaction_id', $request->vnp_TxnRef)->first();
+                
+                if ($booking && $booking->status === 'pending') {
+                    $booking->update(['status' => 'confirmed']);
+                }
+                
+                // Trả về trang Hóa đơn xanh lá thành công
+                return redirect()->route('booking.success', $booking->id);
+            } else {
+                return redirect()->route('restaurants.index')->with('error', 'Giao dịch thanh toán đã bị hủy.');
+            }
+        } else {
+            return redirect()->route('restaurants.index')->with('error', 'Chữ ký bảo mật không hợp lệ.');
+        }
     }
 
     // 3. Hiển thị trang Hóa đơn thành công
