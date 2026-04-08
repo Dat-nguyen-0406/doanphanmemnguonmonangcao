@@ -37,7 +37,7 @@
                         {{ $restaurant->description }}
                     </p>
 
-                    <a href="{{ url('/restaurants/' . $restaurant->id . '/book') }}" class="block w-full text-center bg-red-500 text-white py-2 rounded font-semibold hover:bg-red-600 transition-colors" style="display: block; text-align: center; background-color: #e50050; color: white; padding: 10px; text-decoration: none; border-radius: 5px;">
+                    <a href="{{ route('restaurants.book', $restaurant->id) }}" class="block w-full text-center bg-red-500 text-white py-2 rounded font-semibold hover:bg-red-600 transition-colors" style="display: block; text-align: center; background-color: #e50050; color: white; padding: 10px; text-decoration: none; border-radius: 5px;">
                         Đặt Bàn Ngay
                     </a>
                 </div>
