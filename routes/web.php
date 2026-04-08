@@ -50,7 +50,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
         Route::post('/branches/store', [AeonController::class, 'storeBranch'])->name('admin.branches.store');
         Route::delete('/branches/{id}', [AeonController::class, 'destroyBranch'])->name('admin.branches.destroy');
         Route::get('/branches/{id}/edit', [AeonController::class, 'editBranch'])->name('admin.branches.edit');
-        Route::delete('/branches/{id}', [AeonController::class, 'destroyBranch'])->name('admin.branches.destroy');
 
         // Bổ sung Route Update (vì trong Dashboard Đạt dùng nút Sửa, cần có chỗ lưu)
         Route::put('/branches/{id}', [AeonController::class, 'update'])->name('admin.branches.update');
