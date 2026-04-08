@@ -25,14 +25,10 @@ Route::get('/restaurants', [RestaurantController::class, 'index'])->name('restau
 Route::get('/restaurants/{id}/book', [App\Http\Controllers\RestaurantController::class, 'showBookForm'])->name('restaurants.book');
 Route::post('/restaurants/{id}/book', [App\Http\Controllers\RestaurantController::class, 'submitBooking'])->name('restaurants.book.submit');
 
-// Trang hiển thị giao diện thanh toán cọc (Tạm thời dùng function ẩn để test nhanh)
-Route::get('/booking/payment/{id}', function ($id) {
-    $booking = App\Models\RestaurantBooking::findOrFail($id);
-    return "<h1>Trang Thanh Toán (VNPAY/MoMo)</h1>
-            <p>Mã đơn: {$booking->transaction_id}</p>
-            <p>Số tiền cần cọc: <strong>" . number_format($booking->deposit_amount) . " VNĐ</strong></p>
-            <p>Sau khi test tích hợp API xong, trang này sẽ tự động redirect sang app MoMo/VNPAY.</p>";
-})->name('booking.payment');
+// Luồng Thanh toán và Thành công
+Route::get('/booking/payment/{id}', [App\Http\Controllers\RestaurantController::class, 'showPayment'])->name('booking.payment');
+Route::post('/booking/payment/{id}/process', [App\Http\Controllers\RestaurantController::class, 'processPayment'])->name('booking.payment.process');
+Route::get('/booking/success/{id}', [App\Http\Controllers\RestaurantController::class, 'showSuccess'])->name('booking.success');
 
 // --- LUỒNG QUẢN TRỊ (ADMIN) ---
 // Đăng nhập Admin
