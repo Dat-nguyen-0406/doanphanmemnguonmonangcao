@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            // Thay đổi hoặc cập nhật chú thích cho cột role
+            // 0: Khách hàng, 1: Admin tổng, 2: QL Phim, 3: QL Quán ăn, 4: QL Bán hàng Online
+            $table->integer('role')->default(0)->change(); 
         });
     }
 

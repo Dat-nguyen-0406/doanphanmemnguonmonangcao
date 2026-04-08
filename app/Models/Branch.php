@@ -10,11 +10,11 @@ class Branch extends Model
     use HasFactory;
 
     protected $fillable = [
-        'city_id',
-        'name',
-        'address',
-        'image_url',
-        'map_link',
+        'city_id', 
+        'name', 
+        'address', 
+        'image_url', 
+        'map_link', 
         'description'
     ];
 

@@ -62,18 +62,74 @@ class AuthController extends Controller
     }
 
     // Xử lý Login cho Admin
-    public function adminLogin(LoginRequest $request) {
-        if (Auth::attempt($request->only('email', 'password'))) {
-            // Kiểm tra xem có đúng role Admin không
-            if (Auth::user()->role == 1) {
-                return redirect()->route('admin.dashboard');
-            }
-            
-            // Nếu là User thường mà định vào trang Admin -> Logout và báo lỗi
-            Auth::logout();
-            return redirect()->route('admin.login')->with('error', 'Bạn không có quyền truy cập.');
+    public function adminLogin(Request $request)
+{
+    // 1. Validate dữ liệu đầu vào
+    $credentials = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required'],
+    ], [
+        'email.required' => 'Vui lòng nhập Email.',
+        'email.email' => 'Email không đúng định dạng.',
+        'password.required' => 'Vui lòng nhập mật khẩu.',
+    ]);
+
+    // 2. Thử đăng nhập với thông tin cung cấp
+    if (Auth::attempt($credentials, $request->remember)) {
+        $user = Auth::user();
+
+        // 3. KIỂM TRA QUYỀN: Chỉ cho phép Role từ 1 đến 4 vào trang Admin
+        // Role 0 là khách hàng bình thường - không được vào Dashboard
+        if ($user->role >= 1 && $user->role <= 4) {
+            $request->session()->regenerate(); // Bảo mật session chống tấn công Fixation
+
+            return redirect()->intended(route('admin.dashboard'))
+                             ->with('success', 'Chào mừng Quản trị viên ' . $user->name . ' trở lại!');
         }
-        return back()->withErrors(['email' => 'Tài khoản Admin không đúng.']);
+
+        // 4. Nếu là Role 0 (Khách) nhưng cố tình vào Admin -> Đăng xuất ngay
+        Auth::logout();
+        return back()->with('error', 'Tài khoản của bạn không có quyền truy cập khu vực quản trị.');
+    }
+
+    // 5. Sai thông tin đăng nhập
+    return back()->with('error', 'Email hoặc mật khẩu không chính xác.');
+}
+    // Thêm hàm này vào cuối class AuthController
+      
+        public function dashboard() {
+
+        
+    // 1. Lấy danh sách chi nhánh kèm tên thành phố
+    $branches = \App\Models\Branch::with('city')->get();
+
+    // 2. Lấy các con số thống kê thật
+    $totalBranches = $branches->count();
+    $totalUsers = \App\Models\User::where('role', 0)->count(); // Đếm khách hàng
+
+    // 3. Truyền dữ liệu sang view
+    return view('admin.dashboard', compact('branches', 'totalBranches', 'totalUsers'));
+}
+
+    public function listUsers() {
+        // Lấy tất cả user, có thể phân trang nếu data lớn
+        $users = User::orderBy('role', 'desc')->get(); 
+        return view('admin.users.index', compact('users'));
+    }
+
+    // Cấp quyền quản trị/đối tác
+    public function changeRole(Request $request, $id) {
+        $user = User::findOrFail($id);
+        
+        // Validate role để đảm bảo không truyền số lạ vào DB
+        $request->validate([
+            'role' => 'required|in:0,1,2,3,4'
+        ]);
+
+        $user->role = $request->role;
+        $user->save();
+
+        return back()->with('success', 'Đã cập nhật quyền hạn cho ' . $user->name);
     }
 
     // 5. Đăng xuất

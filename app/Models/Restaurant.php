@@ -12,4 +12,14 @@ class Restaurant extends Model
     {
         return $this->belongsTo(Branch::class);
     }
+
+    public function tables()
+    {
+        return $this->hasMany(RestaurantTable::class);
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(RestaurantBooking::class);
+    }
 }

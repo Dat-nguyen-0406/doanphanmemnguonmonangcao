@@ -13,8 +13,13 @@
         </div>
 
         <div class="p-6" style="padding: 20px;">
-            <form action="#" method="POST">
+            <form action="{{ route('restaurants.book.submit', $restaurant->id) }}" method="POST">
                 @csrf
+                @if(session('error'))
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" style="background-color: #fee2e2; border-color: #f87171; color: #b91c1c; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                    {{ session('error') }}
+                </div>
+                @endif
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
                     <div>

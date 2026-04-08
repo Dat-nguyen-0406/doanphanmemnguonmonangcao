@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Restaurant;
 use App\Models\Branch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Models\RestaurantBooking;
 
 class RestaurantController extends Controller
 {
@@ -32,5 +35,69 @@ class RestaurantController extends Controller
         $restaurant = Restaurant::findOrFail($id);
 
         return view('restaurants.book', compact('restaurant'));
+    }
+
+    // Xử lý logic đặt bàn và cọc tiền (2.2.2.3)
+    public function submitBooking(Request $request, $id)
+    {
+        // 1. Validate dữ liệu đầu vào
+        $request->validate([
+            'booking_date' => 'required|date|after_or_equal:today',
+            'booking_time' => 'required',
+            'guests_count' => 'required|integer|min:1',
+        ]);
+
+        // Giả lập User ID (Vì dự án bạn có thể chưa login, tạm thời lấy user ID = 1)
+        // Trong thực tế sẽ là: $userId = Auth::id();
+        $userId = Auth::id() ?? 1;
+
+        try {
+            // BẮT ĐẦU TRANSACTION: Chống trùng lặp dữ liệu
+            DB::beginTransaction();
+
+            // Lấy thông tin nhà hàng và KHÓA DÒNG (lockForUpdate)
+            // Lệnh này ép các truy vấn khác phải xếp hàng chờ đợi cho đến khi Transaction này xong
+            $restaurant = Restaurant::where('id', $id)->lockForUpdate()->firstOrFail();
+
+            // Tính tổng sức chứa của nhà hàng (Tổng capacity của tất cả các bàn)
+            $totalCapacity = $restaurant->tables()->sum('capacity');
+
+            // Tính tổng số khách đã đặt trùng ngày, trùng giờ và trạng thái đơn đang Pending hoặc Confirmed
+            $bookedGuests = RestaurantBooking::where('restaurant_id', $id)
+                ->where('booking_date', $request->booking_date)
+                ->where('booking_time', $request->booking_time)
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->sum('guests_count');
+
+            // Kiểm tra xem nhà hàng còn đủ chỗ cho số người này không?
+            if (($bookedGuests + $request->guests_count) > $totalCapacity) {
+                // Nếu không đủ chỗ -> Hủy Transaction
+                DB::rollBack();
+                return back()->with('error', 'Xin lỗi, khung giờ này nhà hàng đã hết bàn trống. Vui lòng chọn giờ khác!');
+            }
+
+            // Nếu đủ chỗ -> Tạo đơn đặt bàn với trạng thái 'Pending' (Chờ cọc)
+            // Giả sử phí cọc mặc định là 100,000 VNĐ / đơn
+            $booking = RestaurantBooking::create([
+                'user_id' => $userId,
+                'restaurant_id' => $restaurant->id,
+                'booking_date' => $request->booking_date,
+                'booking_time' => $request->booking_time,
+                'guests_count' => $request->guests_count,
+                'note' => $request->note,
+                'status' => 'pending',
+                'deposit_amount' => 100000,
+                'transaction_id' => 'TXN' . time() // Tạo mã giao dịch ngẫu nhiên
+            ]);
+
+            // LƯU VÀO DATABASE
+            DB::commit();
+
+            // Thành công -> Chuyển hướng sang trang thanh toán cọc
+            return redirect()->route('booking.payment', $booking->id);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Có lỗi hệ thống xảy ra, vui lòng thử lại sau!');
+        }
     }
 }
