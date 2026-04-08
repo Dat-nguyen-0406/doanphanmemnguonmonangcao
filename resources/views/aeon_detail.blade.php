@@ -95,7 +95,7 @@
             <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-[#a61d6d]">
                 <h3 class="font-bold text-xl mb-2">🛍️ Mua sắm trực tuyến</h3>
                 <p class="text-gray-600 text-sm mb-4">Hàng ngàn sản phẩm từ AEON Supermarket đang chờ bạn.</p>
-                <a href="{{ route('restaurants.index') }}" class="block text-center border border-[#a61d6d] text-[#a61d6d] px-4 py-2 rounded text-sm font-bold w-full hover:bg-pink-50 transition">ĐI CHỢ NGAY</a>
+                <a href="{{ route('shop.index') }}" class="block text-center border border-[#a61d6d] text-[#a61d6d] px-4 py-2 rounded text-sm font-bold w-full hover:bg-pink-50 transition">ĐI CHỢ NGAY</a>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-[#a61d6d]">
