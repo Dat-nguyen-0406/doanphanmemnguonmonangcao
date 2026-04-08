@@ -100,4 +100,32 @@ class RestaurantController extends Controller
             return back()->with('error', 'Có lỗi hệ thống xảy ra, vui lòng thử lại sau!');
         }
     }
+    // 1. Hiển thị trang giả lập thanh toán
+    public function showPayment($id)
+    {
+        $booking = RestaurantBooking::findOrFail($id);
+        return view('restaurants.payment', compact('booking'));
+    }
+
+    // 2. Xử lý khi bấm nút "Đã thanh toán"
+    public function processPayment($id)
+    {
+        $booking = RestaurantBooking::findOrFail($id);
+
+        // Đổi trạng thái từ pending -> confirmed
+        if ($booking->status === 'pending') {
+            $booking->update(['status' => 'confirmed']);
+        }
+
+        // Tích hợp Gửi Email (Module 4.2) sẽ viết ở đây sau
+
+        return redirect()->route('booking.success', $booking->id);
+    }
+
+    // 3. Hiển thị trang Hóa đơn thành công
+    public function showSuccess($id)
+    {
+        $booking = RestaurantBooking::with('restaurant')->findOrFail($id);
+        return view('restaurants.success', compact('booking'));
+    }
 }
