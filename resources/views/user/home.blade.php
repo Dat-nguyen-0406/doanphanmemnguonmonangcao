@@ -33,6 +33,10 @@
             <div class="flex items-center space-x-4 text-gray-500 text-sm">
                 @auth
                     <span class="font-medium text-gray-700">Chào, <span class="text-aeon-magenta">{{ Auth::user()->name }}</span></span>
+                    <form action="{{ route('logout') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="text-sm text-red-600 hover:underline">Đăng xuất</button>
+                    </form>
                 @else
                     <a href="{{ route('login') }}" class="hover:text-aeon-magenta font-medium">Đăng nhập</a>
                 @endauth

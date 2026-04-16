@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-
+use App\Models\User; 
+use App\Models\Product;
+use App\Models\Category;
 use App\Models\City;
 use App\Models\Branch;
 use Illuminate\Http\Request;
@@ -79,7 +81,7 @@ public function storeBranch(Request $request) {
         // Eager loading 'branches' để tối ưu truy vấn (tránh lỗi N+1)
         $cities = City::with('branches')->get();
         
-        return view('home', compact('cities'));
+        return view('user.home', compact('cities'));
     }
 
     /**
@@ -91,7 +93,7 @@ public function storeBranch(Request $request) {
         // Tìm chi nhánh theo ID, nếu không thấy sẽ trả về lỗi 404
         $branch = Branch::with('city')->findOrFail($id);
         
-        return view('aeon_detail', compact('branch'));
+        return view('user.aeon_detail', compact('branch'));
     }
 
 
@@ -126,9 +128,28 @@ public function storeBranch(Request $request) {
     /**
      * Chức năng Mua sắm trực tuyến (Online Shopping)
      */
-    public function shop()
-    {
-        // Sau này bạn sẽ lấy dữ liệu từ bảng Products ở đây
-        return view('shop_index');
-    }
+   public function shop(Request $request) {
+    $query = Product::with(['category', 'branch', 'user']);
+
+    // Lọc theo chi nhánh (Branch)
+    $query->when($request->branch_id, function($q) use ($request) {
+        return $q->where('branch_id', $request->branch_id);
+    });
+
+    // Lọc theo danh mục (Category)
+    $query->when($request->category_id, function($q) use ($request) {
+        return $q->where('category_id', $request->category_id);
+    });
+
+    // Tìm kiếm sản phẩm (Search)
+    $query->when($request->search, function($q) use ($request) {
+        return $q->where('name', 'LIKE', '%' . $request->search . '%');
+    });
+
+    $products = $query->latest()->get();
+    $categories = Category::all();
+    $partners = User::where('role', 4)->get(); // Lấy các shop đối tác
+
+    return view('user.shop.index', compact('products', 'categories', 'partners'));
+}
 }
