@@ -72,28 +72,4 @@
     </script>
 </div>
 
-
-
-
-<script>
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const bookingDate = document.getElementById('booking_date').value;
-        const bookingTime = document.getElementById('booking_time').value;
-
-        if (bookingDate && bookingTime) {
-            // Tạo mốc thời gian khách chọn
-            const selectedDate = new Date(`${bookingDate}T${bookingTime}`);
-
-            // Tạo mốc thời gian hiện tại + 1 tiếng
-            const now = new Date();
-            const minTime = new Date(now.getTime() + (60 * 60 * 1000));
-
-            if (selectedDate < minTime) {
-                e.preventDefault(); // Chặn gửi form
-                alert('Lỗi: Bạn phải đặt bàn trước ít nhất 1 tiếng so với giờ hiện tại!');
-            }
-        }
-    });
-</script>
-</div>
 @endsection

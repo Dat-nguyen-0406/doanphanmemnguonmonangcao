@@ -22,20 +22,20 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // nha hang
 Route::get('/restaurants', [RestaurantController::class, 'index'])->name('restaurants.index');
-Route::get('/restaurants/{id}/book', [App\Http\Controllers\RestaurantController::class, 'showBookForm'])->name('restaurants.book');
-Route::post('/restaurants/{id}/book', [App\Http\Controllers\RestaurantController::class, 'submitBooking'])->name('restaurants.book.submit');
+Route::get('/restaurants/{id}/book', [RestaurantController::class, 'showBookForm'])->name('restaurants.book');
+Route::post('/restaurants/{id}/book', [RestaurantController::class, 'submitBooking'])->name('restaurants.book.submit');
 
 // Luồng Thanh toán và Thành công
 Route::middleware(['auth'])->group(function () {
 
     // Luồng Thanh toán VNPAY
-    Route::get('/booking/payment/{id}', [App\Http\Controllers\RestaurantController::class, 'showPayment'])->name('booking.payment');
+    Route::get('/booking/payment/{id}', [RestaurantController::class, 'showPayment'])->name('booking.payment');
     // Đổi action process thành gọi hàm processVnPay
-    Route::post('/booking/payment/{id}/vnpay', [App\Http\Controllers\RestaurantController::class, 'processVnPay'])->name('booking.vnpay.process');
+    Route::post('/booking/payment/{id}/vnpay', [RestaurantController::class, 'processVnPay'])->name('booking.vnpay.process');
     // Đường dẫn hứng kết quả VNPAY trả về (Return URL)
-    Route::get('/booking/vnpay-return', [App\Http\Controllers\RestaurantController::class, 'vnpayReturn'])->name('booking.vnpay.return');
+    Route::get('/booking/vnpay-return', [RestaurantController::class, 'vnpayReturn'])->name('booking.vnpay.return');
 
-    Route::get('/booking/success/{id}', [App\Http\Controllers\RestaurantController::class, 'showSuccess'])->name('booking.success');
+    Route::get('/booking/success/{id}', [RestaurantController::class, 'showSuccess'])->name('booking.success');
 });
 
 // --- LUỒNG QUẢN TRỊ (ADMIN) ---
