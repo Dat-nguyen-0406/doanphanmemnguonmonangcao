@@ -1,15 +1,30 @@
 <?php
 
+use App\Http\Controllers\PartnerShopController;
 use App\Http\Controllers\AeonController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\RestaurantController;
 use App\Models\City;
+
 
 // Trang chủ
 Route::get('/', [AeonController::class, 'index'])->name('home');
 Route::get('/aeon-detail/{id}', [AeonController::class, 'show'])->name('aeon.detail');
 Route::get('/shop', [AeonController::class, 'shop'])->name('shop.index');
+
+// Di chuyển các route này vào một nhóm để dễ quản lý
+Route::middleware(['auth'])->group(function () {
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::get('/add-to-cart/{id}', [CartController::class, 'add'])->name('cart.add');
+    Route::delete('/remove-from-cart', [CartController::class, 'remove'])->name('cart.remove');
+
+    // Các route thanh toán VNPay
+    Route::post('/vnpay-payment', [CartController::class, 'vnpay_payment'])->name('vnpay.payment');
+    Route::get('/vnpay-return', [CartController::class, 'vnpay_return'])->name('vnpay.return');
+});
+
 // --- LUỒNG NGƯỜI DÙNG (USER) ---
 // Đăng ký
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
@@ -85,8 +100,23 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     });
 
     // 7. Phân khu dành cho BÁN HÀNG ONLINE (Shop - Role 4)
+    // Trong nhóm middleware ['auth', 'admin']
     Route::middleware(['partner:1,4'])->prefix('shop-partner')->group(function () {
-        // Route::get('/products', [PartnerShopController::class, 'index'])->name('admin.shop_partner.index');
-        // Thêm các route quản lý sản phẩm đối tác tại đây
+        // Quản lý sản phẩm
+        Route::get('/products', [PartnerShopController::class, 'index'])->name('admin.shop.index');
+        Route::get('/products/create', [PartnerShopController::class, 'create'])->name('admin.shop.create');
+        Route::post('/products/store', [PartnerShopController::class, 'store'])->name('admin.shop.store');
+
+        Route::delete('/products/{id}', [PartnerShopController::class, 'destroy'])->name('admin.shop.destroy');
+        Route::get('/products/{id}/edit', [PartnerShopController::class, 'edit'])->name('admin.shop.edit');
+        Route::put('/products/{id}', [PartnerShopController::class, 'update'])->name('admin.shop.update');
+
+        // Quản lý Danh mục
+        Route::get('/categories', [PartnerShopController::class, 'categoryIndex'])->name('admin.category.index');
+        Route::post('/categories/store', [PartnerShopController::class, 'categoryStore'])->name('admin.category.store');
+        Route::delete('/categories/{id}', [PartnerShopController::class, 'categoryDestroy'])->name('admin.category.destroy');
+
+        // Quản lý đơn hàng
+        Route::get('/orders', [PartnerShopController::class, 'orders'])->name('admin.shop.orders');
     });
 });

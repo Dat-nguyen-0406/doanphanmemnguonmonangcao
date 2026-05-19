@@ -65,11 +65,29 @@
 
                 {{-- PHÂN KHU DÀNH CHO SHOP (ROLE 1 & 4) --}}
                 @if(Auth::user()->role == 1 || Auth::user()->role == 4)
-                <div class="pt-2 border-t border-slate-800">
+                <div class="pt-2 border-t border-slate-800" x-data="{ openShop: {{ request()->routeIs('admin.shop.*', 'admin.category.*') ? 'true' : 'false' }} }">
                     <p class="text-[10px] font-bold text-slate-500 uppercase px-4 mb-2 tracking-widest">Bán hàng Online</p>
-                    <a href="#" class="block py-2.5 px-4 rounded-xl hover:bg-slate-800 text-gray-400 hover:text-white transition">
-                        <i class="fa-solid fa-bag-shopping mr-2 text-yellow-400"></i> Quản lý Sản phẩm
-                    </a>
+                    
+                    <button @click="openShop = !openShop" 
+                        class="w-full flex items-center justify-between py-2.5 px-4 rounded-xl transition duration-200 {{ request()->routeIs('admin.shop.*', 'admin.category.*') ? 'bg-slate-800 text-white' : 'hover:bg-slate-800 text-gray-400 hover:text-white' }}">
+                        <div class="flex items-center">
+                            <i class="fa-solid fa-bag-shopping mr-2 text-yellow-400"></i>
+                            <span class="font-bold text-sm">Quản lý Shop</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300" :class="openShop ? 'rotate-180' : ''"></i>
+                    </button>
+
+                    <div x-show="openShop" x-collapse x-cloak class="pl-9 mt-1 space-y-1">
+                        <a href="{{ route('admin.category.index') }}" 
+                        class="block py-2 text-xs {{ request()->routeIs('admin.category.*') ? 'text-pink-500 font-bold' : 'text-gray-500 hover:text-white' }} transition-colors">
+                            <i class="fa-solid fa-layer-group mr-2 text-[10px]"></i> Quản lý Danh mục
+                        </a>
+
+                        <a href="{{ route('admin.shop.index') }}" 
+                        class="block py-2 text-xs {{ request()->routeIs('admin.shop.*') ? 'text-pink-500 font-bold' : 'text-gray-500 hover:text-white' }} transition-colors">
+                            <i class="fa-solid fa-boxes-stacked mr-2 text-[10px]"></i> Quản lý Sản phẩm
+                        </a>
+                    </div>
                 </div>
                 @endif
 
