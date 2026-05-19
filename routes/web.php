@@ -39,6 +39,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/restaurants', [RestaurantController::class, 'index'])->name('restaurants.index');
 Route::get('/restaurants/{id}/book', [RestaurantController::class, 'showBookForm'])->name('restaurants.book');
 Route::post('/restaurants/{id}/book', [RestaurantController::class, 'submitBooking'])->name('restaurants.book.submit');
+Route::get('/booking/vnpay-return', [RestaurantController::class, 'vnpayReturn'])->name('booking.vnpay.return');
 
 // Luồng Thanh toán và Thành công
 Route::middleware(['auth'])->group(function () {
@@ -48,7 +49,6 @@ Route::middleware(['auth'])->group(function () {
     // Đổi action process thành gọi hàm processVnPay
     Route::post('/booking/payment/{id}/vnpay', [RestaurantController::class, 'processVnPay'])->name('booking.vnpay.process');
     // Đường dẫn hứng kết quả VNPAY trả về (Return URL)
-    Route::get('/booking/vnpay-return', [RestaurantController::class, 'vnpayReturn'])->name('booking.vnpay.return');
 
     Route::get('/booking/success/{id}', [RestaurantController::class, 'showSuccess'])->name('booking.success');
 });
