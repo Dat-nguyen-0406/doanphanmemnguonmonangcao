@@ -25,4 +25,9 @@ class Branch extends Model
     {
         return $this->belongsTo(City::class);
     }
+
+    public function restaurants()
+    {
+        return $this->hasMany(Restaurant::class);
+    }
 }

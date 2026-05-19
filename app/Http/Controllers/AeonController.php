@@ -10,7 +10,6 @@ use App\Models\Branch;
 use Illuminate\Http\Request;
 
 
-
 class AeonController extends Controller
 {
 

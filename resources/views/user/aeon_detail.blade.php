@@ -89,7 +89,7 @@
             <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-[#a61d6d]">
                 <h3 class="font-bold text-xl mb-2">🍴 Đặt bàn nhà hàng</h3>
                 <p class="text-gray-600 text-sm mb-4">Khám phá khu ẩm thực và đặt chỗ trước để không phải chờ đợi.</p>
-                <button class="bg-[#a61d6d] text-white px-4 py-2 rounded text-sm font-bold w-full">KHÁM PHÁ</button>
+                <a href="{{ route('restaurants.index') }}" class="block text-center bg-[#a61d6d] text-white px-4 py-2 rounded text-sm font-bold w-full hover:bg-pink-800 transition">KHÁM PHÁ</a>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-[#a61d6d]">
