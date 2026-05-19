@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'xcbvdasfxc@gmail.com'], // Kiểm tra nếu email này chưa có thì mới tạo
+            ['email' => 'abc@gmail.com'], // Kiểm tra nếu email này chưa có thì mới tạo
             [
                 'name' => 'User Thường', // Tên người dùng bình thường
                 'password' => Hash::make('12345678'), // Đặt mật khẩu mặc định
@@ -62,6 +62,10 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             RestaurantSeeder::class,
+        ]);
+
+        $this->call([
+            RestaurantTableSeeder::class,
         ]);
     }
 }
