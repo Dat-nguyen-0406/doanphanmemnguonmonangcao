@@ -2,7 +2,6 @@ name: Laravel CI
 
 on:
   push:
-    branches: [main, duoc-fix, dat-update]
   pull_request:
     branches: [main]
 
@@ -27,11 +26,18 @@ jobs:
       - name: Create .env file
         run: cp .env.example .env
 
+      - name: Configure CI environment
+        run: |
+          echo "APP_ENV=testing" >> .env
+          echo "CACHE_STORE=array" >> .env
+          echo "SESSION_DRIVER=array" >> .env
+          echo "QUEUE_CONNECTION=sync" >> .env
+
       - name: Generate Laravel app key
         run: php artisan key:generate
 
-      - name: Clear Laravel cache
-        run: php artisan optimize:clear
+      - name: Clear Laravel config
+        run: php artisan config:clear
 
       - name: Check Laravel application
         run: php artisan about
