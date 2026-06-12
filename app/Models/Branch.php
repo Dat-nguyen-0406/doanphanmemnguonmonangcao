@@ -26,8 +26,11 @@ class Branch extends Model
         return $this->belongsTo(City::class);
     }
 
-    public function restaurants()
+    /**
+     * Một chi nhánh có thể có nhiều Cinema Partner (role 2 users)
+     */
+    public function partners()
     {
-        return $this->hasMany(Restaurant::class);
+        return $this->hasMany(User::class, 'branch_id');
     }
 }

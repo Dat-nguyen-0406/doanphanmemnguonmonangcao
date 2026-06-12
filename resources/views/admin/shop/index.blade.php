@@ -5,11 +5,21 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
         <div>
             <h2 class="text-2xl font-bold text-gray-800">Kho hàng Online</h2>
-            <p class="text-sm text-gray-500">Quản lý danh sách sản phẩm và tồn kho của bạn</p>
+            <p class="text-sm text-gray-500">
+                @if(Auth::user()->role == 1)
+                    Chế độ giám sát: Xem danh sách sản phẩm toàn hệ thống
+                @else
+                    Quản lý danh sách sản phẩm và tồn kho của bạn
+                @endif
+            </p>
         </div>
+
+        {{-- 1. ẨN NÚT THÊM SẢN PHẨM VỚI ADMIN TỔNG --}}
+        @if(Auth::user()->role != 1)
         <a href="{{ route('admin.shop.create') }}" class="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-pink-600 transition-all shadow-lg flex items-center justify-center">
             <i class="fa-solid fa-plus mr-2"></i> THÊM SẢN PHẨM
         </a>
+        @endif
     </div>
 
     @if(session('success'))
@@ -49,6 +59,12 @@
                                     <div class="text-[10px] text-pink-500 font-medium uppercase tracking-tighter italic">
                                         <i class="fa-solid fa-location-dot mr-1"></i>{{ $product->branch->name }}
                                     </div>
+                                    {{-- Hiển thị chủ sở hữu nếu là Admin tổng --}}
+                                    @if(Auth::user()->role == 1)
+                                        <div class="text-[9px] text-blue-500 font-bold uppercase">
+                                            Sở hữu: {{ $product->user->name ?? 'N/A' }}
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </td>
@@ -66,15 +82,21 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 text-right space-x-2">
-                            <a href="{{ route('admin.shop.edit', $product->id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all">
-                                <i class="fa-solid fa-pen-to-square text-xs"></i>
-                            </a>
-                            <form action="{{ route('admin.shop.destroy', $product->id) }}" method="POST" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')">
-                                @csrf @method('DELETE')
-                                <button class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all">
-                                    <i class="fa-solid fa-trash text-xs"></i>
-                                </button>
-                            </form>
+                            {{-- 2. ĐIỀU KIỆN HIỂN THỊ NÚT THAO TÁC --}}
+                            @if(Auth::user()->role != 1)
+                                <a href="{{ route('admin.shop.edit', $product->id) }}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all">
+                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                </a>
+                                <form action="{{ route('admin.shop.destroy', $product->id) }}" method="POST" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')">
+                                    @csrf @method('DELETE')
+                                    <button class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all">
+                                        <i class="fa-solid fa-trash text-xs"></i>
+                                    </button>
+                                </form>
+                            @else
+                                {{-- Admin tổng chỉ thấy trạng thái hoặc icon xem --}}
+                                <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">CHỈ XEM</span>
+                            @endif
                         </td>
                     </tr>
                     @empty

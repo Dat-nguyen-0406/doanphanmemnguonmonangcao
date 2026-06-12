@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User\Shop;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\Product;
 use App\Models\Category;
@@ -92,15 +94,20 @@ class PartnerShopController extends Controller
      * Form chỉnh sửa sản phẩm
      */
     public function edit($id)
-    {
-        // Bảo mật: Đảm bảo người dùng chỉ sửa được hàng của mình
-        $product = Product::where('user_id', Auth::id())->findOrFail($id);
-        
-        $categories = Category::all();
-        $branches = Branch::all();
-        
-        return view('admin.shop.edit', compact('product', 'categories', 'branches'));
+{
+    // Logic: Admin tổng thì tìm mọi sản phẩm, Partner thì chỉ tìm sản phẩm của mình
+    $query = (Auth::user()->role == 1) ? Product::query() : Product::where('user_id', Auth::id());
+    $product = $query->findOrFail($id);
+    
+    // Bảo vệ thêm: Admin tổng lỡ có vào được trang edit cũng không cho thấy form sửa
+    if (Auth::user()->role == 1) {
+        return redirect()->route('admin.shop.index')->with('error', 'Chế độ xem: Admin không thể sửa sản phẩm.');
     }
+
+    $categories = Category::all();
+    $branches = Branch::all();
+    return view('admin.shop.edit', compact('product', 'categories', 'branches'));
+}
 
     /**
      * Cập nhật thông tin sản phẩm

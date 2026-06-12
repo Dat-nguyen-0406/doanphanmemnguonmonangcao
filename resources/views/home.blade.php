@@ -26,19 +26,43 @@
                 <div class="hidden md:flex space-x-4 text-sm font-medium text-gray-600">
                     <a href="{{ route('home') }}" class="aeon-magenta border-b-2 border-aeon-magenta pb-5 transition-all">Hệ thống AEON</a>
                     <a href="{{ route('shop.index') }}" class="hover:text-aeon-magenta transition-colors">Mua sắm trực tuyến</a>
-                    <a href="#" class="hover:text-aeon-magenta transition-colors">Khuyến mãi</a>
                 </div>
             </div>
             
             <div class="flex items-center space-x-4 text-gray-500 text-sm">
                 @auth
-                    <span class="font-medium text-gray-700">Chào, <span class="text-aeon-magenta">{{ Auth::user()->name }}</span></span>
-                    <form action="{{ route('logout') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="text-sm text-red-600 hover:underline">Đăng xuất</button>
-                    </form>
+                    <div class="flex items-center space-x-3">
+                        <!-- Bấm vào ảnh đại diện để xem Profile -->
+                        <a href="{{ route('profile.index') }}" class="flex items-center space-x-3 group">
+                            <!-- Ô tròn ảnh đại diện -->
+                            <div class="w-10 h-10 rounded-full border-2 border-aeon-magenta overflow-hidden bg-gray-200 flex-shrink-0 shadow-sm group-hover:ring-2 group-hover:ring-offset-2 group-hover:ring-[#a61d6d] transition-all">
+                                {{-- SỬA: Auth::user()->avatar thành Auth::user()->image --}}
+                                @if(Auth::user()->image)
+                                    <img src="{{ asset('storage/' . Auth::user()->image) }}" alt="Avatar" class="w-full h-full object-cover">
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center bg-pink-100 text-aeon-magenta">
+                                        <i class="fa-solid fa-user text-lg"></i>
+                                    </div>
+                                @endif
+                            </div>
+                            <!-- Tên người dùng -->
+                            <div class="flex flex-col">
+                                <span class="font-medium text-gray-700 text-sm leading-none group-hover:text-aeon-magenta">
+                                    Chào, <span class="text-aeon-magenta font-bold">{{ Auth::user()->name }}</span>
+                                </span>
+                            </div>
+                        </a>
+
+                        <!-- Nút Đăng xuất tách biệt -->
+                        <form action="{{ route('logout') }}" method="POST" class="inline border-l pl-3 ml-2 border-gray-200">
+                            @csrf
+                            <button type="submit" class="text-[10px] text-red-500 hover:underline uppercase font-bold tracking-tighter">
+                                Thoát
+                            </button>
+                        </form>
+                    </div>
                 @else
-                    <a href="{{ route('login') }}" class="hover:text-aeon-magenta font-medium">Đăng nhập</a>
+                    <a href="{{ route('login') }}" class="hover:text-aeon-magenta font-medium text-sm">Đăng nhập</a>
                 @endauth
                 <i class="fa-solid fa-magnifying-glass cursor-pointer hover:text-aeon-magenta transition-colors"></i>
             </div>
