@@ -189,12 +189,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     });
 
     // --- PHÂN KHU ROLE 1,4: BÁN HÀNG ONLINE (SHOP PARTNER) ---
-    Route::middleware(['partner:1,4'])->prefix('shop-partner')->group(function() {
-    // Quản lý sản phẩm
+    Route::middleware(['partner:1,4'])->prefix('shop-partner')->group(function () {
+        // Quản lý sản phẩm
         Route::get('/products', [PartnerShopController::class, 'index'])->name('admin.shop.index');
         Route::get('/products/create', [PartnerShopController::class, 'create'])->name('admin.shop.create');
         Route::post('/products/store', [PartnerShopController::class, 'store'])->name('admin.shop.store');
-    
+
         Route::delete('/products/{id}', [PartnerShopController::class, 'destroy'])->name('admin.shop.destroy');
         Route::get('/products/{id}/edit', [PartnerShopController::class, 'edit'])->name('admin.shop.edit');
         Route::put('/products/{id}', [PartnerShopController::class, 'update'])->name('admin.shop.update');
@@ -208,5 +208,5 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
         // Quản lý đơn hàng (Mở rộng sau)
         Route::get('/orders', [PartnerShopController::class, 'orders'])->name('admin.shop.orders');
-});
+    });
 });
