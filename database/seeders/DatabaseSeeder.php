@@ -64,7 +64,7 @@ class DatabaseSeeder extends Seeder
                 'role' => 0,
             ]
         );
-    
+
 
         // Tạo Cities & Branches
         $hanoi = \App\Models\City::create(['name' => 'Hà Nội', 'slug' => 'ha-noi']);
@@ -86,6 +86,8 @@ class DatabaseSeeder extends Seeder
             ShowtimeSeeder::class,
             SeatSeeder::class,
             CinemaPartnerSeeder::class,
+            RestaurantSeeder::class,
+            RestaurantTableSeeder::class,
         ]);
 
         // Gọi seeders cho Shop (từ kethop) - nếu cần
