@@ -24,23 +24,44 @@
                     <div class="bg-[#a61d6d] text-white p-2 rounded font-bold">AEON</div>
                     <span class="text-xs text-[#a61d6d] font-semibold leading-tight">MALL<br>UTILITY</span>
                 </a>
-                
-                <div class="hidden md:flex space-x-6 text-sm font-medium text-gray-700">
-                    <a href="#" class="hover:text-[#a61d6d]">Lịch chiếu</a>
-                    <a href="#" class="hover:text-[#a61d6d]">Ẩm thực</a>
-                    <a href="#" class="hover:text-[#a61d6d]">Vị trí cửa hàng</a>
-                </div>
             </div>
 
             <div class="flex items-center space-x-4">
+                    <!-- Cập nhật trong phần thanh điều hướng (Navbar) -->
                 @auth
-                    <span class="text-sm font-medium text-gray-700">Chào, {{ Auth::user()->name }}</span>
-                    <form action="{{ route('logout') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="text-sm text-red-600 hover:underline">Đăng xuất</button>
-                    </form>
+                    <div class="flex items-center space-x-3">
+                        <!-- Bấm vào ảnh đại diện để xem Profile -->
+                        <a href="{{ route('profile.index') }}" class="flex items-center space-x-3 group">
+                            <!-- Ô tròn ảnh đại diện -->
+                            <div class="w-10 h-10 rounded-full border-2 border-aeon-magenta overflow-hidden bg-gray-200 flex-shrink-0 shadow-sm group-hover:ring-2 group-hover:ring-offset-2 group-hover:ring-[#a61d6d] transition-all">
+                                {{-- SỬA: Auth::user()->avatar thành Auth::user()->image --}}
+                                @if(Auth::user()->image)
+                                    <img src="{{ asset('storage/' . Auth::user()->image) }}" alt="Avatar" class="w-full h-full object-cover">
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center bg-pink-100 text-aeon-magenta">
+                                        <i class="fa-solid fa-user text-lg"></i>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <!-- Tên người dùng -->
+                            <div class="flex flex-col">
+                                <span class="font-medium text-gray-700 text-sm leading-none group-hover:text-aeon-magenta">
+                                    Chào, <span class="text-aeon-magenta font-bold">{{ Auth::user()->name }}</span>
+                                </span>
+                            </div>
+                        </a>
+
+                        <!-- Nút Đăng xuất tách biệt -->
+                        <form action="{{ route('logout') }}" method="POST" class="inline border-l pl-3 ml-2 border-gray-200">
+                            @csrf
+                            <button type="submit" class="text-[10px] text-red-500 hover:underline uppercase font-bold tracking-tighter">
+                                Thoát
+                            </button>
+                        </form>
+                    </div>
                 @else
-                    <a href="{{ route('login') }}" class="text-sm font-medium text-[#a61d6d] hover:underline">Đăng nhập</a>
+                    <a href="{{ route('login') }}" class="hover:text-aeon-magenta font-medium text-sm">Đăng nhập</a>
                 @endauth
             </div>
         </div>
@@ -83,13 +104,13 @@
             <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-[#a61d6d]">
                 <h3 class="font-bold text-xl mb-2">🎬 Đặt vé xem phim</h3>
                 <p class="text-gray-600 text-sm mb-4">Xem lịch chiếu và chọn chỗ ngồi yêu thích tại CGV/Lotte AEON.</p>
-                <a href="#" class="block text-center bg-[#a61d6d] text-white px-4 py-2 rounded text-sm font-bold w-full hover:bg-pink-800 transition">ĐẶT VÉ NGAY</a>
+                <a href="{{ route('showtimes', $branch->id) }}" class="block text-center bg-[#a61d6d] text-white px-4 py-2 rounded text-sm font-bold w-full hover:bg-pink-800 transition">ĐẶT VÉ NGAY</a>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-[#a61d6d]">
                 <h3 class="font-bold text-xl mb-2">🍴 Đặt bàn nhà hàng</h3>
                 <p class="text-gray-600 text-sm mb-4">Khám phá khu ẩm thực và đặt chỗ trước để không phải chờ đợi.</p>
-                <button class="bg-[#a61d6d] text-white px-4 py-2 rounded text-sm font-bold w-full">KHÁM PHÁ</button>
+                <a href="{{ route('restaurants.index') }}" class="block text-center bg-[#a61d6d] text-white px-4 py-2 rounded text-sm font-bold w-full hover:bg-pink-800 transition">KHÁM PHÁ NGAY</a>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-[#a61d6d]">

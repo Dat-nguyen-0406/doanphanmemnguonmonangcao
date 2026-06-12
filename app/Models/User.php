@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -13,40 +12,51 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'phone',    
+        'phone',
         'address',
-        'role', 
+        'role',
+        'image',     // từ kethop (avatar profile)
+        'branch_id', // từ doanphanmem (Cinema Partner liên kết chi nhánh)
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Cinema Partner (role 2) liên kết với một chi nhánh AEON
+     */
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    /**
+     * Kiểm tra xem user có phải admin không (role 1)
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role == 1;
+    }
+
+    /**
+     * Kiểm tra xem user có phải cinema partner không (role 2)
+     */
+    public function isCinemaPartner(): bool
+    {
+        return $this->role == 2;
     }
 }

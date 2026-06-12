@@ -25,4 +25,12 @@ class Branch extends Model
     {
         return $this->belongsTo(City::class);
     }
+
+    /**
+     * Một chi nhánh có thể có nhiều Cinema Partner (role 2 users)
+     */
+    public function partners()
+    {
+        return $this->hasMany(User::class, 'branch_id');
+    }
 }

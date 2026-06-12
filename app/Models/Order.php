@@ -24,8 +24,10 @@ class Order extends Model
     }
 
     // Quan hệ: Một đơn hàng có nhiều chi tiết sản phẩm
-    public function details()
-    {
-        return $this->hasMany(OrderDetail::class);
-    }
+    // Một đơn hàng có nhiều chi tiết đơn hàng (Sản phẩm đã mua)
+    // File: app/Models/Order.php
+public function orderDetails() // Đổi từ details() thành orderDetails()
+{
+    return $this->hasMany(OrderDetail::class, 'order_id');
+}
 }

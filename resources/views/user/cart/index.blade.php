@@ -7,6 +7,42 @@
         <div class="flex items-end justify-between mb-16">
             <div>
                 <h2 class="text-5xl font-black text-gray-900 italic uppercase tracking-tighter leading-none">Giỏ hàng</h2>
+                <div class="mb-8">
+    {{-- Thông báo lỗi (Error) --}}
+    @if(session('error') || $errors->any())
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl shadow-sm animate-pulse">
+            <div class="flex items-center">
+                <i class="fa-solid fa-circle-exclamation text-red-500 mr-3 text-lg"></i>
+                <p class="text-red-700 text-xs font-black uppercase tracking-wider">
+                    @if(session('error'))
+                        {{ session('error') }}
+                    @else
+                        Có lỗi xảy ra, vui lòng kiểm tra lại!
+                    @endif
+                </p>
+            </div>
+            @if($errors->any())
+                <ul class="mt-2 ml-8 list-disc list-inside text-[10px] text-red-600 font-bold uppercase">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+    @endif
+
+    {{-- Thông báo thành công (Success) --}}
+    @if(session('success'))
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-xl shadow-sm">
+            <div class="flex items-center">
+                <i class="fa-solid fa-circle-check text-green-500 mr-3 text-lg"></i>
+                <p class="text-green-700 text-xs font-black uppercase tracking-wider">
+                    {{ session('success') }}
+                </p>
+            </div>
+        </div>
+    @endif
+</div>
                 <p class="text-gray-400 font-bold uppercase text-[10px] tracking-[0.3em] mt-3 ml-1">Kiểm tra lại các lựa chọn của bạn</p>
             </div>
             <div class="text-right">
@@ -86,6 +122,14 @@
                             <button type="submit" class="w-full bg-[#a61d6d] text-white py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest flex items-center justify-center space-x-3">
                                 <i class="fa-solid fa-credit-card"></i>
                                 <span>Thanh toán VNPay</span>
+                            </button>
+                        </form>
+                        {{-- Tìm đoạn form của VNPay và thêm đoạn này vào dưới --}}
+                        <form action="{{ route('cod.payment') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="w-full bg-gray-900 text-white py-5 rounded-[2rem] font-black text-xs uppercase tracking-widest flex items-center justify-center space-x-3 hover:bg-black transition-all">
+                                <i class="fa-solid fa-truck-fast"></i>
+                                <span>Thanh toán khi nhận hàng (COD)</span>
                             </button>
                         </form>
                         

@@ -42,12 +42,25 @@
                         @if($user->id !== Auth::id())
                         <form action="{{ route('admin.users.changeRole', $user->id) }}" method="POST" class="flex items-center gap-2">
                             @csrf
-                            <select name="role" class="text-xs border border-gray-200 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-pink-500">
+                            <select name="role" id="role_{{ $user->id }}" class="text-xs border border-gray-200 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-pink-500 role-select" data-user-id="{{ $user->id }}">
                                 <option value="0" {{ $user->role == 0 ? 'selected' : '' }}>Khách hàng</option>
                                 <option value="2" {{ $user->role == 2 ? 'selected' : '' }}>Đối tác Cinema</option>
                                 <option value="3" {{ $user->role == 3 ? 'selected' : '' }}>Đối tác Food</option>
                                 <option value="4" {{ $user->role == 4 ? 'selected' : '' }}>Đối tác Online Shop</option>
                             </select>
+
+                            <!-- Nếu role = 2 (Cinema Partner), hiển thị dropdown chọn chi nhánh AEON -->
+                            <div id="branch_selector_{{ $user->id }}" class="branch-selector" style="display: {{ $user->role == 2 ? 'block' : 'none' }};">
+                                <select name="branch_id" id="branch_{{ $user->id }}" class="text-xs border border-red-300 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-red-500">
+                                    <option value="">-- Chọn chi nhánh AEON --</option>
+                                    @foreach($branches as $branch)
+                                        <option value="{{ $branch->id }}" {{ ($user->branch_id == $branch->id) ? 'selected' : '' }}>
+                                            {{ $branch->name }} ({{ $branch->city->name ?? 'N/A' }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             <button type="submit" class="bg-slate-800 text-white text-[10px] px-3 py-1 rounded hover:bg-black transition uppercase font-bold">
                                 Lưu
                             </button>
@@ -62,4 +75,24 @@
         </table>
     </div>
 </div>
+
+<script>
+document.querySelectorAll('.role-select').forEach(select => {
+    select.addEventListener('change', function() {
+        const userId = this.getAttribute('data-user-id');
+        const branchSelector = document.getElementById('branch_selector_' + userId);
+        const branchInput = document.getElementById('branch_' + userId);
+        
+        // Nếu chọn role = 2 (Cinema Partner), hiển thị branch selector
+        if (this.value === '2') {
+            branchSelector.style.display = 'block';
+            branchInput.required = true; // Bắt buộc chọn branch nếu là role 2
+        } else {
+            branchSelector.style.display = 'none';
+            branchInput.required = false;
+            branchInput.value = ''; // Xóa giá trị branch nếu không phải role 2
+        }
+    });
+});
+</script>
 @endsection
