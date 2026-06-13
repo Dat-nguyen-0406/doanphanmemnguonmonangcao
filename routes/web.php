@@ -90,10 +90,13 @@ Route::middleware(['auth'])->group(function () {
 
     // --- ĐẶT BÀN NHÀ HÀNG (từ doanphanmem) ---
     Route::get('/booking/payment/{id}', [RestaurantController::class, 'showPayment'])->name('booking.payment');
+    Route::post('/booking/payment/{id}/vnpay', [RestaurantController::class, 'processVnPay'])->name('booking.vnpay.process');
 });  
 
 // VNPay return callback (không cần auth)
 Route::get('/payment/return', [PaymentController::class, 'paymentReturn'])->name('payment.return');
+Route::get('/booking/vnpay-restaurant-return', [RestaurantController::class, 'vnpayReturn'])->name('booking.vnpay.return');
+Route::get('/booking/success/{id}', [RestaurantController::class, 'showSuccess'])->name('booking.success');
 
 // =====================================================
 // LUỒNG QUẢN TRỊ (ADMIN)
