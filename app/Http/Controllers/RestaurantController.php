@@ -85,7 +85,7 @@ class RestaurantController extends Controller
     {
         $request->validate([
             'booking_date' => 'required|date|after_or_equal:today',
-            'booking_time' => 'required',
+            'booking_time' => 'required|date_format:H:i',
             'guests_count' => 'required|integer|min:1',
             'table_id'     => 'required|integer|exists:restaurant_tables,id',
         ]);
