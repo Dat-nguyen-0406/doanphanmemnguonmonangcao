@@ -178,6 +178,11 @@ class RestaurantController extends Controller
     public function showPayment($id)
     {
         $booking = RestaurantBooking::with(['restaurant', 'table', 'items.menuItem'])->findOrFail($id);
+
+        if ($booking->user_id !== Auth::id()) {
+            abort(403);
+        }
+
         return view('restaurants.payment', compact('booking'));
     }
 
@@ -293,6 +298,11 @@ class RestaurantController extends Controller
     public function showSuccess($id)
     {
         $booking = RestaurantBooking::with(['restaurant', 'table', 'items.menuItem'])->findOrFail($id);
+
+        if ($booking->user_id !== Auth::id()) {
+            abort(403);
+        }
+
         return view('restaurants.success', compact('booking'));
     }
 }
