@@ -85,7 +85,8 @@ class RestaurantController extends Controller
         ]);
 
         $bookingDateTime = \Carbon\Carbon::parse(
-            $request->booking_date . ' ' . $request->booking_time, 'Asia/Ho_Chi_Minh'
+            $request->booking_date . ' ' . $request->booking_time,
+            'Asia/Ho_Chi_Minh'
         );
         $minAllowedTime = \Carbon\Carbon::now('Asia/Ho_Chi_Minh')->addHour();
 
@@ -262,10 +263,23 @@ class RestaurantController extends Controller
 
         if ($secureHash == $vnp_SecureHash) {
             if ($request->vnp_ResponseCode == '00') {
+
                 $booking = RestaurantBooking::where('transaction_id', $request->vnp_TxnRef)->first();
-                if ($booking && $booking->status === 'pending') {
+
+                // Kiểm tra booking có tồn tại không
+                if (!$booking) {
+                    return redirect()->route('restaurants.index')->with('error', 'Không tìm thấy thông tin đặt bàn.');
+                }
+
+                // Kiểm tra booking có thuộc về user đang đăng nhập không
+                if ($booking->user_id !== Auth::id()) {
+                    return redirect()->route('restaurants.index')->with('error', 'Bạn không có quyền thực hiện thao tác này.');
+                }
+
+                if ($booking->status === 'pending') {
                     $booking->update(['status' => 'confirmed']);
                 }
+
                 return redirect()->route('booking.success', $booking->id);
             } else {
                 return redirect()->route('restaurants.index')->with('error', 'Giao dịch thanh toán đã bị hủy.');
