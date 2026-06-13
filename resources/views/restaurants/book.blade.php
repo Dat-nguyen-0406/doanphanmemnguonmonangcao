@@ -455,5 +455,28 @@ document.getElementById('bookingForm').addEventListener('submit', function(e) {
         }
     }
 });
+
+// ---- GUESTS COUNT CHANGE VALIDATION ----
+document.getElementById('guests_count').addEventListener('change', function() {
+    if (selectedTableId) {
+        const selectedTable = document.querySelector(`.table-seat[data-id="${selectedTableId}"]`);
+        const cap = parseInt(selectedTable.dataset.capacity);
+        const guests = parseInt(this.value) || 0;
+        if (guests > cap) {
+            alert('Số người vượt quá sức chứa bàn đã chọn. Vui lòng chọn lại bàn!');
+            // Clear selection
+            selectedTableId = null;
+            document.getElementById('selected_table_id').value = '';
+            selectedTable.classList.remove('selected');
+            document.getElementById('selectedTableInfo').style.display = 'none';
+            // Reset style
+            selectedTable.style.background = '#e8f5e9';
+            selectedTable.style.borderColor = '#4caf50';
+            selectedTable.querySelectorAll('span').forEach(s => {
+                s.style.color = s.style.fontSize === '11px' ? '#2e7d32' : '#888';
+            });
+        }
+    }
+});
 </script>
 @endsection
