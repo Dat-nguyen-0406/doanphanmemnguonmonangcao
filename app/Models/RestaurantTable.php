@@ -38,8 +38,8 @@ class RestaurantTable extends Model
     public function isBookedAt(string $date, string $time): bool
     {
         $dateTime = \Carbon\Carbon::parse($date . ' ' . $time, 'Asia/Ho_Chi_Minh');
-        $startTime = $dateTime->copy()->subHours(2)->format('H:i:s');
-        $endTime = $dateTime->copy()->addHours(2)->format('H:i:s');
+        $startTime = $dateTime->copy()->subHours(2.5)->format('H:i:s');
+        $endTime = $dateTime->copy()->addHours(2.5)->format('H:i:s');
 
         return $this->bookings()
             ->where('booking_date', $date)
