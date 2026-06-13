@@ -11,6 +11,7 @@ use App\Models\RestaurantTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class RestaurantController extends Controller
@@ -297,6 +298,13 @@ class RestaurantController extends Controller
                 return redirect()->route('restaurants.index')->with('error', 'Giao dịch thanh toán đã bị hủy.');
             }
         } else {
+            \Log::warning('VNPAY SecureHash mismatch', [
+                'expected' => $secureHash,
+                'received' => $vnp_SecureHash,
+                'data' => $inputData,
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
             return redirect()->route('restaurants.index')->with('error', 'Chữ ký bảo mật không hợp lệ.');
         }
     }
