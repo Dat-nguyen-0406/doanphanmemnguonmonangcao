@@ -283,11 +283,6 @@ class RestaurantController extends Controller
                     return redirect()->route('restaurants.index')->with('error', 'Không tìm thấy thông tin đặt bàn.');
                 }
 
-                // Kiểm tra booking có thuộc về user đang đăng nhập không
-                if ($booking->user_id !== Auth::id()) {
-                    return redirect()->route('restaurants.index')->with('error', 'Bạn không có quyền thực hiện thao tác này.');
-                }
-
                 if ($booking->status === 'pending') {
                     $booking->update(['status' => 'confirmed']);
                 }
