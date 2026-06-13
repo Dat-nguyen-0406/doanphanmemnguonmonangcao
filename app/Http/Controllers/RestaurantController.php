@@ -11,6 +11,7 @@ use App\Models\RestaurantTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class RestaurantController extends Controller
@@ -34,6 +35,12 @@ class RestaurantController extends Controller
     // FORM ĐẶT BÀN
     public function showBookForm(Request $request, $id)
     {
+        if (Auth::check() && session()->has('pending_booking')) {
+            $pendingData = session()->pull('pending_booking');
+            $request->replace($pendingData);
+            return $this->submitBooking($request, $id);
+        }
+
         $restaurant = Restaurant::with(['branch', 'tables' => function ($q) {
             $q->where('is_active', true)->orderBy('floor')->orderBy('table_number');
         }])->findOrFail($id);
@@ -79,13 +86,14 @@ class RestaurantController extends Controller
     {
         $request->validate([
             'booking_date' => 'required|date|after_or_equal:today',
-            'booking_time' => 'required',
+            'booking_time' => 'required|date_format:H:i',
             'guests_count' => 'required|integer|min:1',
             'table_id'     => 'required|integer|exists:restaurant_tables,id',
         ]);
 
         $bookingDateTime = \Carbon\Carbon::parse(
-            $request->booking_date . ' ' . $request->booking_time, 'Asia/Ho_Chi_Minh'
+            $request->booking_date . ' ' . $request->booking_time,
+            'Asia/Ho_Chi_Minh'
         );
         $minAllowedTime = \Carbon\Carbon::now('Asia/Ho_Chi_Minh')->addHour();
 
@@ -94,6 +102,7 @@ class RestaurantController extends Controller
         }
 
         if (!Auth::check()) {
+            session(['pending_booking' => $request->all()]);
             session(['url.intended' => url()->current()]);
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để thực hiện đặt bàn.');
         }
@@ -114,15 +123,20 @@ class RestaurantController extends Controller
                 return back()->with('error', "Bàn này chỉ phục vụ {$table->capacity} người. Vui lòng chọn bàn có sức chứa lớn hơn!");
             }
 
+            $bookingTimeParsed = \Carbon\Carbon::parse($request->booking_date . ' ' . $request->booking_time);
+            $startTime = $bookingTimeParsed->copy()->subHours(2.5)->format('H:i:s');
+            $endTime = $bookingTimeParsed->copy()->addHours(2.5)->format('H:i:s');
+
             $isBooked = RestaurantBooking::where('table_id', $table->id)
                 ->where('booking_date', $request->booking_date)
-                ->where('booking_time', $request->booking_time)
+                ->where('booking_time', '>', $startTime)
+                ->where('booking_time', '<', $endTime)
                 ->whereIn('status', ['pending', 'confirmed'])
                 ->exists();
 
             if ($isBooked) {
                 DB::rollBack();
-                return back()->with('error', 'Bàn này đã được đặt trong khung giờ bạn chọn. Vui lòng chọn bàn hoặc giờ khác!');
+                return back()->with('error', 'Bàn này đã được đặt hoặc có lịch trùng trong khung giờ bạn chọn (bao gồm 30 phút buffer). Vui lòng chọn bàn hoặc giờ khác!');
             }
 
             $preOrderAmount = 0;
@@ -177,6 +191,11 @@ class RestaurantController extends Controller
     public function showPayment($id)
     {
         $booking = RestaurantBooking::with(['restaurant', 'table', 'items.menuItem'])->findOrFail($id);
+
+        if ($booking->user_id !== Auth::id()) {
+            abort(403);
+        }
+
         return view('restaurants.payment', compact('booking'));
     }
 
@@ -190,7 +209,7 @@ class RestaurantController extends Controller
         $vnp_TmnCode    = env('VNPAY_TMN_CODE');
         $vnp_HashSecret = env('VNPAY_HASH_SECRET');
 
-        $totalAmount = ($booking->deposit_amount + ($booking->pre_order_amount ?? 0)) * 100;
+        $totalAmount = (int)(($booking->deposit_amount + ($booking->pre_order_amount ?? 0)) * 100);
 
         $inputData = [
             "vnp_Version"   => "2.1.0",
@@ -262,15 +281,30 @@ class RestaurantController extends Controller
 
         if ($secureHash == $vnp_SecureHash) {
             if ($request->vnp_ResponseCode == '00') {
+
                 $booking = RestaurantBooking::where('transaction_id', $request->vnp_TxnRef)->first();
-                if ($booking && $booking->status === 'pending') {
+
+                // Kiểm tra booking có tồn tại không
+                if (!$booking) {
+                    return redirect()->route('restaurants.index')->with('error', 'Không tìm thấy thông tin đặt bàn.');
+                }
+
+                if ($booking->status === 'pending') {
                     $booking->update(['status' => 'confirmed']);
                 }
+
                 return redirect()->route('booking.success', $booking->id);
             } else {
                 return redirect()->route('restaurants.index')->with('error', 'Giao dịch thanh toán đã bị hủy.');
             }
         } else {
+            \Log::warning('VNPAY SecureHash mismatch', [
+                'expected' => $secureHash,
+                'received' => $vnp_SecureHash,
+                'data' => $inputData,
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
             return redirect()->route('restaurants.index')->with('error', 'Chữ ký bảo mật không hợp lệ.');
         }
     }
@@ -279,6 +313,19 @@ class RestaurantController extends Controller
     public function showSuccess($id)
     {
         $booking = RestaurantBooking::with(['restaurant', 'table', 'items.menuItem'])->findOrFail($id);
+
+        // Check nếu chưa login
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Vui lòng đăng nhập để xem thông tin đặt bàn.')
+                ->with('url.intended', route('booking.success', $id));
+        }
+
+        // Check ownership
+        if ($booking->user_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền xem thông tin đặt bàn này.');
+        }
+
         return view('restaurants.success', compact('booking'));
     }
 }

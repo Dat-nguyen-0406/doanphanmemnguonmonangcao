@@ -1,0 +1,46 @@
+name: Laravel CI
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  laravel-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, bcmath, pdo, pdo_mysql, fileinfo, openssl
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Create .env file
+        run: cp .env.example .env
+
+      - name: Configure CI environment
+        run: |
+          echo "APP_ENV=testing" >> .env
+          echo "CACHE_STORE=array" >> .env
+          echo "SESSION_DRIVER=array" >> .env
+          echo "QUEUE_CONNECTION=sync" >> .env
+
+      - name: Generate Laravel app key
+        run: php artisan key:generate
+
+      - name: Clear Laravel config
+        run: php artisan config:clear
+
+      - name: Check Laravel application
+        run: php artisan about
+
+      - name: Check routes
+        run: php artisan route:list

@@ -33,13 +33,18 @@ class RestaurantTable extends Model
     }
 
     /**
-     * Kiểm tra bàn có bị đặt tại ngày & giờ cụ thể không
+     * Kiểm tra bàn có bị đặt tại ngày & giờ cụ thể không (trong khoảng trùng 2 tiếng)
      */
     public function isBookedAt(string $date, string $time): bool
     {
+        $dateTime = \Carbon\Carbon::parse($date . ' ' . $time, 'Asia/Ho_Chi_Minh');
+        $startTime = $dateTime->copy()->subHours(2.5)->format('H:i:s');
+        $endTime = $dateTime->copy()->addHours(2.5)->format('H:i:s');
+
         return $this->bookings()
             ->where('booking_date', $date)
-            ->where('booking_time', $time)
+            ->where('booking_time', '>', $startTime)
+            ->where('booking_time', '<', $endTime)
             ->whereIn('status', ['pending', 'confirmed'])
             ->exists();
     }

@@ -32,12 +32,20 @@ class RestaurantAdminController extends Controller
 
     public function create()
     {
-        $branches = Branch::all();
+        if (auth()->user()->role == 3 && auth()->user()->branch_id) {
+            $branches = Branch::where('id', auth()->user()->branch_id)->get();
+        } else {
+            $branches = Branch::all();
+        }
         return view('admin.restaurant.item.creat', compact('branches'));
     }
 
     public function store(Request $request)
     {
+        if (auth()->user()->role == 3 && auth()->user()->branch_id) {
+            $request->merge(['branch_id' => auth()->user()->branch_id]);
+        }
+
         $request->validate([
             'branch_id'    => 'required|exists:branches,id',
             'name'         => 'required|string|max:255',
@@ -61,14 +69,22 @@ class RestaurantAdminController extends Controller
 
     public function edit($id)
     {
-        $restaurant = Restaurant::findOrFail($id);
-        $branches = Branch::all();
+        $restaurant = $this->getRestaurantOrAbort($id);
+        if (auth()->user()->role == 3 && auth()->user()->branch_id) {
+            $branches = Branch::where('id', auth()->user()->branch_id)->get();
+        } else {
+            $branches = Branch::all();
+        }
         return view('admin.restaurant.item.edit', compact('restaurant', 'branches'));
     }
 
     public function update(Request $request, $id)
     {
-        $restaurant = Restaurant::findOrFail($id);
+        $restaurant = $this->getRestaurantOrAbort($id);
+
+        if (auth()->user()->role == 3 && auth()->user()->branch_id) {
+            $request->merge(['branch_id' => auth()->user()->branch_id]);
+        }
 
         $request->validate([
             'branch_id'    => 'required|exists:branches,id',
@@ -93,7 +109,7 @@ class RestaurantAdminController extends Controller
 
     public function destroy($id)
     {
-        $restaurant = Restaurant::findOrFail($id);
+        $restaurant = $this->getRestaurantOrAbort($id);
         $restaurant->delete();
         return redirect()->route('admin.restaurant.index')
             ->with('success', 'Đã xoá nhà hàng thành công!');
@@ -104,20 +120,20 @@ class RestaurantAdminController extends Controller
     // =====================================================
     public function tables($restaurantId)
     {
-        $restaurant = Restaurant::findOrFail($restaurantId);
+        $restaurant = $this->getRestaurantOrAbort($restaurantId);
         $tables = $restaurant->tables()->orderBy('floor')->orderBy('table_number')->get();
         return view('admin.restaurant.table.index', compact('restaurant', 'tables'));
     }
 
     public function tableCreate($restaurantId)
     {
-        $restaurant = Restaurant::findOrFail($restaurantId);
+        $restaurant = $this->getRestaurantOrAbort($restaurantId);
         return view('admin.restaurant.table.creat', compact('restaurant'));
     }
 
     public function tableStore(Request $request, $restaurantId)
     {
-        $restaurant = Restaurant::findOrFail($restaurantId);
+        $restaurant = $this->getRestaurantOrAbort($restaurantId);
 
         $request->validate([
             'table_number' => 'required|string|max:50',
@@ -143,13 +159,14 @@ class RestaurantAdminController extends Controller
 
     public function tableEdit($restaurantId, $tableId)
     {
-        $restaurant = Restaurant::findOrFail($restaurantId);
+        $restaurant = $this->getRestaurantOrAbort($restaurantId);
         $table = RestaurantTable::where('restaurant_id', $restaurantId)->findOrFail($tableId);
         return view('admin.restaurant.table.edit', compact('restaurant', 'table'));
     }
 
     public function tableUpdate(Request $request, $restaurantId, $tableId)
     {
+        $this->getRestaurantOrAbort($restaurantId);
         $table = RestaurantTable::where('restaurant_id', $restaurantId)->findOrFail($tableId);
 
         $request->validate([
@@ -176,6 +193,7 @@ class RestaurantAdminController extends Controller
 
     public function tableDestroy($restaurantId, $tableId)
     {
+        $this->getRestaurantOrAbort($restaurantId);
         $table = RestaurantTable::where('restaurant_id', $restaurantId)->findOrFail($tableId);
         $table->delete();
         return redirect()->route('admin.restaurant.tables', $restaurantId)
@@ -187,14 +205,14 @@ class RestaurantAdminController extends Controller
     // =====================================================
     public function menu($restaurantId)
     {
-        $restaurant = Restaurant::findOrFail($restaurantId);
+        $restaurant = $this->getRestaurantOrAbort($restaurantId);
         $menuItems = $restaurant->menuItems()->orderBy('category')->orderBy('name')->get();
         return view('admin.restaurant.menu.index', compact('restaurant', 'menuItems'));
     }
 
     public function menuStore(Request $request, $restaurantId)
     {
-        $restaurant = Restaurant::findOrFail($restaurantId);
+        $restaurant = $this->getRestaurantOrAbort($restaurantId);
 
         $request->validate([
             'name'     => 'required|string|max:255',
@@ -217,6 +235,7 @@ class RestaurantAdminController extends Controller
 
     public function menuDestroy($restaurantId, $itemId)
     {
+        $this->getRestaurantOrAbort($restaurantId);
         $item = RestaurantMenuItem::where('restaurant_id', $restaurantId)->findOrFail($itemId);
         $item->delete();
         return redirect()->route('admin.restaurant.menu', $restaurantId)
@@ -225,13 +244,14 @@ class RestaurantAdminController extends Controller
 
     public function menuEdit($restaurantId, $itemId)
     {
-        $restaurant = Restaurant::findOrFail($restaurantId);
+        $restaurant = $this->getRestaurantOrAbort($restaurantId);
         $item = RestaurantMenuItem::where('restaurant_id', $restaurantId)->findOrFail($itemId);
         return view('admin.restaurant.menu.edit', compact('restaurant', 'item'));
     }
 
     public function menuUpdate(Request $request, $restaurantId, $itemId)
     {
+        $this->getRestaurantOrAbort($restaurantId);
         $item = RestaurantMenuItem::where('restaurant_id', $restaurantId)->findOrFail($itemId);
 
         $request->validate([
@@ -259,6 +279,11 @@ class RestaurantAdminController extends Controller
     public function bookings(Request $request)
     {
         $query = RestaurantBooking::with(['restaurant', 'user', 'table'])
+            ->whereHas('restaurant', function ($q) {
+                if (auth()->user()->role == 3 && auth()->user()->branch_id) {
+                    $q->where('branch_id', auth()->user()->branch_id);
+                }
+            })
             ->latest();
 
         if ($request->filled('status')) {
@@ -272,16 +297,39 @@ class RestaurantAdminController extends Controller
         }
 
         $bookings = $query->paginate(20);
-        $restaurants = Restaurant::all();
+
+        if (auth()->user()->role == 3 && auth()->user()->branch_id) {
+            $restaurants = Restaurant::where('branch_id', auth()->user()->branch_id)->get();
+        } else {
+            $restaurants = Restaurant::all();
+        }
 
         return view('admin.restaurant.bookings.index', compact('bookings', 'restaurants'));
     }
 
     public function bookingUpdateStatus(Request $request, $id)
     {
-        $booking = RestaurantBooking::findOrFail($id);
+        $booking = RestaurantBooking::with('restaurant')->findOrFail($id);
+
+        if (auth()->user()->role == 3 && auth()->user()->branch_id) {
+            if ($booking->restaurant->branch_id != auth()->user()->branch_id) {
+                abort(403, 'Bạn không có quyền cập nhật đơn đặt bàn này.');
+            }
+        }
+
         $request->validate(['status' => 'required|in:pending,confirmed,cancelled,completed']);
         $booking->update(['status' => $request->status]);
         return redirect()->back()->with('success', 'Cập nhật trạng thái đặt bàn thành công!');
+    }
+
+    private function getRestaurantOrAbort($id)
+    {
+        $restaurant = Restaurant::findOrFail($id);
+        if (auth()->user()->role == 3 && auth()->user()->branch_id) {
+            if ($restaurant->branch_id != auth()->user()->branch_id) {
+                abort(403, 'Bạn không có quyền quản lý nhà hàng này.');
+            }
+        }
+        return $restaurant;
     }
 }
