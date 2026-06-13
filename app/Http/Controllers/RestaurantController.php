@@ -196,7 +196,7 @@ class RestaurantController extends Controller
         $vnp_TmnCode    = env('VNPAY_TMN_CODE');
         $vnp_HashSecret = env('VNPAY_HASH_SECRET');
 
-        $totalAmount = ($booking->deposit_amount + ($booking->pre_order_amount ?? 0)) * 100;
+        $totalAmount = (int)(($booking->deposit_amount + ($booking->pre_order_amount ?? 0)) * 100);
 
         $inputData = [
             "vnp_Version"   => "2.1.0",
