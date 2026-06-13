@@ -306,8 +306,16 @@ class RestaurantController extends Controller
     {
         $booking = RestaurantBooking::with(['restaurant', 'table', 'items.menuItem'])->findOrFail($id);
 
+        // Check nếu chưa login
+        if (!Auth::check()) {
+            return redirect()->route('login')
+                ->with('error', 'Vui lòng đăng nhập để xem thông tin đặt bàn.')
+                ->with('url.intended', route('booking.success', $id));
+        }
+
+        // Check ownership
         if ($booking->user_id !== Auth::id()) {
-            abort(403);
+            abort(403, 'Bạn không có quyền xem thông tin đặt bàn này.');
         }
 
         return view('restaurants.success', compact('booking'));
