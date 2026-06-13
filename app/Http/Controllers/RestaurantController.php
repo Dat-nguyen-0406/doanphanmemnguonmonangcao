@@ -34,6 +34,12 @@ class RestaurantController extends Controller
     // FORM ĐẶT BÀN
     public function showBookForm(Request $request, $id)
     {
+        if (Auth::check() && session()->has('pending_booking')) {
+            $pendingData = session()->pull('pending_booking');
+            $request->replace($pendingData);
+            return $this->submitBooking($request, $id);
+        }
+
         $restaurant = Restaurant::with(['branch', 'tables' => function ($q) {
             $q->where('is_active', true)->orderBy('floor')->orderBy('table_number');
         }])->findOrFail($id);
@@ -95,6 +101,7 @@ class RestaurantController extends Controller
         }
 
         if (!Auth::check()) {
+            session(['pending_booking' => $request->all()]);
             session(['url.intended' => url()->current()]);
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để thực hiện đặt bàn.');
         }
