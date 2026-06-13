@@ -88,6 +88,7 @@ class DatabaseSeeder extends Seeder
             CinemaPartnerSeeder::class,
             RestaurantSeeder::class,
             RestaurantTableSeeder::class,
+            RestaurantMenuItemSeeder::class,
         ]);
 
         // Gọi seeders cho Shop (từ kethop) - nếu cần
