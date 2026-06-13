@@ -122,15 +122,20 @@ class RestaurantController extends Controller
                 return back()->with('error', "Bàn này chỉ phục vụ {$table->capacity} người. Vui lòng chọn bàn có sức chứa lớn hơn!");
             }
 
+            $bookingTimeParsed = \Carbon\Carbon::parse($request->booking_date . ' ' . $request->booking_time);
+            $startTime = $bookingTimeParsed->copy()->subHours(2)->format('H:i:s');
+            $endTime = $bookingTimeParsed->copy()->addHours(2)->format('H:i:s');
+
             $isBooked = RestaurantBooking::where('table_id', $table->id)
                 ->where('booking_date', $request->booking_date)
-                ->where('booking_time', $request->booking_time)
+                ->where('booking_time', '>', $startTime)
+                ->where('booking_time', '<', $endTime)
                 ->whereIn('status', ['pending', 'confirmed'])
                 ->exists();
 
             if ($isBooked) {
                 DB::rollBack();
-                return back()->with('error', 'Bàn này đã được đặt trong khung giờ bạn chọn. Vui lòng chọn bàn hoặc giờ khác!');
+                return back()->with('error', 'Bàn này đã được đặt hoặc có lịch trùng trong khung giờ (2 tiếng) bạn chọn. Vui lòng chọn bàn hoặc giờ khác!');
             }
 
             $preOrderAmount = 0;
