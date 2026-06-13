@@ -50,7 +50,20 @@
             </div>
 
             <div class="md:col-span-2 space-y-6">
-                <div class="bg-white p-6 rounded-lg shadow-sm">
+                <!-- TAB NAVIGATION -->
+                <div class="bg-white rounded-lg shadow-sm border-b">
+                    <div class="flex">
+                        <button onclick="switchTab('orders')" id="tab-orders-btn" class="flex-1 px-6 py-4 text-center font-bold text-gray-700 border-b-2 border-[#a61d6d] tab-btn" style="border-color: #a61d6d;">
+                            <i class="fa-solid fa-shopping-bag mr-2"></i> Lịch sử đi chợ
+                        </button>
+                        <button onclick="switchTab('bookings')" id="tab-bookings-btn" class="flex-1 px-6 py-4 text-center font-bold text-gray-400 border-b-2 border-gray-200 tab-btn">
+                            <i class="fa-solid fa-utensils mr-2"></i> Lịch sử đặt bàn
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB 1: ORDERS -->
+                <div id="tab-orders" class="bg-white p-6 rounded-lg shadow-sm tab-content">
                     <h2 class="font-bold text-lg text-gray-800 mb-6 flex items-center">
                         <i class="fa-solid fa-clock-rotate-left mr-2 text-[#a61d6d]"></i> Lịch sử đi chợ AEON
                     </h2>
@@ -73,7 +86,6 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
-    {{-- Vòng lặp chính để hiển thị từng hàng đơn hàng --}}
                                     @foreach($orders as $order)
                                     <tr class="hover:bg-pink-50 transition-colors cursor-pointer group" 
                                         onclick="window.location='{{ route('profile.orders.show', $order->id) }}'">
@@ -87,23 +99,22 @@
                                         </td>
                                         
                                         <td class="px-4 py-4 max-w-[200px] truncate">
-                                        {{-- Đổi $order->details thành $order->orderDetails ở dòng dưới --}}
                                             @if($order->orderDetails && $order->orderDetails->count() > 0)
                                                 @foreach($order->orderDetails as $detail)
-                                                    {{ $detail->product->name ?? 'Sản phẩm' }}{{ !$loop->last ? ',' : '' }}
+                                                    {{ $detail->product->name ?? 'San pham' }}{{ !$loop->last ? ',' : '' }}
                                                 @endforeach
                                             @else
-                                                <span class="text-gray-400 italic text-xs">Không có chi tiết</span>
+                                                <span class="text-gray-400 italic text-xs">Khong co chi tiet</span>
                                             @endif
                                         </td>
                                         
                                         <td class="px-4 py-4 text-right font-bold">
-                                            {{ number_format($order->total_amount, 0, ',', '.') }}đ
+                                            {{ number_format($order->total_amount, 0, ',', '.') }}d
                                         </td>
                                         
                                         <td class="px-4 py-4 text-center flex items-center justify-center space-x-2">
                                             <span class="px-2 py-1 rounded-full text-[10px] font-bold {{ $order->status == 'paid' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600' }}">
-                                                {{ $order->status == 'paid' ? 'ĐÃ THANH TOÁN' : 'CHỜ XỬ LÝ' }}
+                                                {{ $order->status == 'paid' ? 'DA THANH TOAN' : 'CHO XU LY' }}
                                             </span>
                                             <i class="fa-solid fa-chevron-right text-[10px] text-gray-300 group-hover:text-[#a61d6d]"></i>
                                         </td>
@@ -111,6 +122,48 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- TAB 2: RESTAURANT BOOKINGS -->
+                <div id="tab-bookings" class="bg-white p-6 rounded-lg shadow-sm tab-content hidden">
+                    <h2 class="font-bold text-lg text-gray-800 mb-6 flex items-center">
+                        <i class="fa-solid fa-clock-rotate-left mr-2 text-[#a61d6d]"></i> Lịch sử đặt bàn AEON
+                    </h2>
+
+                    @if($restaurantBookings->isEmpty())
+                        <div class="text-center py-10 border-2 border-dashed border-gray-100 rounded-xl">
+                            <p class="text-gray-400">Bạn chưa có lịch đặt bàn nào.</p>
+                            <a href="{{ route('restaurants.index') }}" class="text-[#a61d6d] font-bold text-sm hover:underline mt-2 inline-block">DAT BAN NGAY</a>
+                        </div>
+                    @else
+                        <div class="space-y-4">
+                            @foreach($restaurantBookings as $booking)
+                            <div class="border rounded-lg p-4 hover:shadow-md transition-shadow hover:border-[#a61d6d]">
+                                <div class="grid md:grid-cols-3 gap-4">
+                                    <div>
+                                        <p class="text-xs text-gray-500 uppercase font-bold">Nha hang</p>
+                                        <p class="font-bold text-gray-800">{{ $booking->restaurant->name ?? 'N/A' }}</p>
+                                        <p class="text-xs text-gray-500">Ban {{ $booking->table->table_number ?? 'N/A' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 uppercase font-bold">Thoi gian</p>
+                                        <p class="font-bold text-gray-800">{{ \Carbon\Carbon::parse($booking->booking_date . ' ' . $booking->booking_time)->format('d/m/Y H:i') }}</p>
+                                        <p class="text-xs text-gray-500">{{ $booking->guests_count }} khach</p>
+                                    </div>
+                                    <div class="flex items-end justify-between md:justify-end">
+                                        <div>
+                                            <p class="text-xs text-gray-500 uppercase font-bold">Trang thai</p>
+                                            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold 
+                                                {{ $booking->status == 'confirmed' ? 'bg-green-100 text-green-600' : ($booking->status == 'pending' ? 'bg-orange-100 text-orange-600' : 'bg-red-100 text-red-600') }}">
+                                                {{ $booking->status == 'confirmed' ? 'DA XAC NHAN' : ($booking->status == 'pending' ? 'CHO XAC NHAN' : 'DA HUY') }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
                         </div>
                     @endif
                 </div>
@@ -128,6 +181,27 @@
             }
             reader.readAsDataURL(input.files[0]);
         }
+    }
+
+    // Switch between tabs
+    function switchTab(tabName) {
+        // Hide all tabs
+        const tabs = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => tab.classList.add('hidden'));
+        
+        // Show selected tab
+        document.getElementById('tab-' + tabName).classList.remove('hidden');
+        
+        // Update button styles
+        const btns = document.querySelectorAll('.tab-btn');
+        btns.forEach(btn => {
+            btn.style.borderColor = '#e0e0e0';
+            btn.style.color = '#999';
+        });
+        
+        const activeBtn = document.getElementById('tab-' + tabName + '-btn');
+        activeBtn.style.borderColor = '#a61d6d';
+        activeBtn.style.color = '#333';
     }
 </script>
 @endsection
