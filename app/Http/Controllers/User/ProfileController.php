@@ -41,7 +41,7 @@ class ProfileController extends Controller
         'phone'   => 'required|string|max:15',
         'email'   => 'required|email|unique:users,email,' . $user->id,
         'address' => 'nullable|string',
-        'avatar'  => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Đây là tên input từ Form
+        'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         'password'=> 'nullable|min:6|confirmed'
     ]);
 

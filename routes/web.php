@@ -89,14 +89,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/my-bookings', [AeonController::class, 'myBookings'])->name('my.bookings');
 
     // Thanh toán Cinema (VNPay)
+    // FIX: route '/payment/return' PHẢI khai báo TRƯỚC route wildcard
+    // '/payment/{booking}' — nếu không Laravel sẽ khớp "/payment/return"
+    // vào route wildcard (hiểu {booking} = "return"), gọi AeonController::paymentPage('return'),
+    // ném ModelNotFoundException và trả về trang 404, khiến callback VNPay không bao giờ chạy tới.
     Route::post('/payment/create', [PaymentController::class, 'createPayment'])->name('payment.create');
+    Route::get('/payment/return', [PaymentController::class, 'paymentReturn'])->name('payment.return');
     Route::get('/payment/{booking}', [AeonController::class, 'paymentPage'])->name('payment.page');
     Route::get('/ticket/{booking}', [AeonController::class, 'eTicket'])->name('booking.ticket');
-    Route::get('/payment/return', [PaymentController::class, 'paymentReturn'])->name('payment.return');
 });
-
-// VNPay return callback (không cần auth)
-Route::get('/payment/return', [PaymentController::class, 'paymentReturn'])->name('payment.return');
 
 // =====================================================
 // LUỒNG QUẢN TRỊ (ADMIN)

@@ -24,11 +24,7 @@
                     <span class="text-xs text-[#D82D8B] font-semibold leading-tight">CINEMA<br>VIETNAM</span>
                 </a>
 
-                <div class="hidden md:flex space-x-6 text-sm font-medium text-gray-700">
-                    <a href="#" class="hover:text-[#D82D8B]">Lịch chiếu</a>
-                    <a href="#" class="hover:text-[#D82D8B]">Ẩm thực</a>
-                    <a href="#" class="hover:text-[#D82D8B]">Vị trí cửa hàng</a>
-                </div>
+                
             </div>
 
             <div class="flex items-center space-x-4">

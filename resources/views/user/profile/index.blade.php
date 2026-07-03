@@ -4,7 +4,9 @@
 <div class="bg-gray-50 min-h-screen py-10">
     <div class="max-w-6xl mx-auto px-4">
         <h1 class="text-2xl font-bold text-[#a61d6d] mb-8 uppercase italic">Hồ sơ thành viên AEON</h1>
-     
+     @error('avatar')
+    <p class="text-xs text-red-500 font-semibold mt-1">{{ $message }}</p>
+@enderror
         <div class="grid md:grid-cols-3 gap-8">
             <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-[#a61d6d]">
                 <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">

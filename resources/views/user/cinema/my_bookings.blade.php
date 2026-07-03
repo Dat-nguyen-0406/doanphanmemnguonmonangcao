@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Thêm thẻ meta CSRF để bảo mật cho các yêu cầu gửi bằng JavaScript -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Lịch sử đặt vé - AEON Cinema</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/dist/css/all.min.css">
@@ -16,6 +18,7 @@
 </head>
 <body class="bg-gray-50">
 
+    <!-- Navigation -->
     <nav class="bg-white border-b sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
             <div class="flex items-center space-x-8">
@@ -23,12 +26,6 @@
                     <div class="bg-[#a61d6d] text-white p-2 rounded font-bold">AEON</div>
                     <span class="text-xs text-[#a61d6d] font-semibold leading-tight">MALL<br>UTILITY</span>
                 </a>
-
-                <div class="hidden md:flex space-x-6 text-sm font-medium text-gray-700">
-                    <a href="#" class="hover:text-[#a61d6d]">Lịch chiếu</a>
-                    <a href="#" class="hover:text-[#a61d6d]">Ẩm thực</a>
-                    <a href="#" class="hover:text-[#a61d6d]">Vị trí cửa hàng</a>
-                </div>
             </div>
 
             <div class="flex items-center space-x-4">
@@ -46,6 +43,7 @@
         </div>
     </nav>
 
+    <!-- Breadcrumb -->
     <div class="bg-white py-2 border-b">
         <div class="max-w-7xl mx-auto px-4 text-xs text-gray-500 flex items-center space-x-2">
             <a href="{{ route('home') }}" class="hover:text-[#a61d6d]"><i class="fa-solid fa-house"></i></a>
@@ -54,6 +52,7 @@
         </div>
     </div>
 
+    <!-- Banner Header -->
     <div class="aeon-gradient h-[200px] relative text-white flex items-end pb-6">
         <div class="max-w-7xl mx-auto px-4 w-full">
             <div class="flex items-center space-x-4">
@@ -68,15 +67,27 @@
                     <p class="text-sm opacity-90"><i class="fa-solid fa-ticket mr-2"></i>Quản lý vé đã đặt của bạn</p>
                     <div class="flex items-center space-x-2 text-xs pt-1">
                         <i class="fa-solid fa-user mr-1"></i>
-                        <span>{{ Auth::user()->name }}</span>
+                        <span>{{ Auth::check() ? Auth::user()->name : 'Khách' }}</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 py-12">
         <div class="max-w-6xl mx-auto">
+            
+            <!-- Back Button -->
+            <div class="mb-6">
+                <a href="{{ route('home') }}"
+                   onclick="if (window.history.length > 1) { event.preventDefault(); window.history.back(); }"
+                   class="inline-flex items-center text-sm font-semibold text-gray-600 hover:text-[#a61d6d] transition-colors">
+                    <i class="fa-solid fa-arrow-left mr-2"></i>Quay lại
+                </a>
+            </div>
+
+            <!-- Flash Alert -->
             @if(session('success'))
                 <div class="bg-green-50 border border-green-200 text-green-800 px-6 py-4 rounded-lg mb-6 flex items-center">
                     <i class="fas fa-check-circle text-green-600 mr-3"></i>
@@ -85,6 +96,7 @@
             @endif
 
             @if($bookings->isEmpty())
+                <!-- Empty State -->
                 <div class="bg-white rounded-lg shadow-lg p-12 text-center border border-gray-100">
                     <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                         <i class="fas fa-ticket-alt text-4xl text-gray-400"></i>
@@ -96,22 +108,25 @@
                     </a>
                 </div>
             @else
+                <!-- Bookings Count -->
                 <div class="mb-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-2">Vé đã đặt của bạn</h2>
                     <p class="text-gray-600">Tổng cộng {{ $bookings->count() }} vé đã đặt</p>
                 </div>
 
+                <!-- Bookings List -->
                 <div class="grid gap-6">
                     @foreach($bookings as $booking)
                     <div class="bg-white rounded-lg shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden">
-                        <!-- Header -->
+                        
+                        <!-- Card Header -->
                         <div class="bg-gradient-to-r from-[#a61d6d] to-pink-600 p-6 text-white">
                             <div class="flex flex-col md:flex-row md:items-center md:justify-between">
                                 <div>
                                     <h3 class="text-xl font-bold mb-1">{{ $booking->showtime->movie->title }}</h3>
                                     <p class="text-sm opacity-90">{{ $booking->showtime->movie->genre ?? 'Phim' }}</p>
                                 </div>
-                                <div class="mt-4 md:mt-0 text-right">
+                                <div class="mt-4 md:mt-0 text-left md:text-right">
                                     <div class="text-3xl font-bold mb-1">{{ number_format($booking->total_price) }} VND</div>
                                     <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold
                                         @if($booking->status === 'confirmed') bg-green-500 text-white
@@ -129,9 +144,10 @@
                             </div>
                         </div>
 
-                        <!-- Content -->
+                        <!-- Card Content -->
                         <div class="p-6">
                             <div class="grid md:grid-cols-2 gap-6 mb-6">
+                                <!-- Left Info Column -->
                                 <div class="space-y-4">
                                     <div class="flex items-center">
                                         <i class="fas fa-map-marker-alt text-[#a61d6d] w-5 mr-3"></i>
@@ -156,6 +172,7 @@
                                     </div>
                                 </div>
 
+                                <!-- Right Info Column -->
                                 <div class="space-y-4">
                                     <div>
                                         <p class="text-sm text-gray-600 mb-2 flex items-center">
@@ -185,7 +202,7 @@
                                             @if($booking->payment->status === 'success')
                                                 <i class="fas fa-check-circle mr-1"></i>Đã thanh toán
                                             @elseif($booking->payment->status === 'pending')
-                                                <i class="fas fa-clock mr-1"></i>Chờ thanh toán
+                                                <i class="fas fa-clock mr-1"></i>Chờ xử lý
                                             @else
                                                 <i class="fas fa-times-circle mr-1"></i>Thanh toán thất bại
                                             @endif
@@ -195,30 +212,40 @@
                                 </div>
                             </div>
 
-                            <!-- Actions -->
+                            <!-- Card Actions -->
                             <div class="border-t pt-6">
-                                <div class="flex flex-col sm:flex-row gap-3 justify-end">
+                                <div class="flex flex-col sm:flex-row gap-3 justify-end items-center">
                                     @php $ticketCode = 'BK' . $booking->id; @endphp
-                            @if($booking->status === 'confirmed' && $booking->showtime->start_time > now())
-                                        <a href="{{ route('booking.ticket', $booking->id) }}" class="inline-flex items-center px-4 py-2 bg-[#D82D8B] text-white rounded-lg hover:bg-[#A50064] transition-colors">
+
+                                    <!-- Vé đã XÁC NHẬN và CHƯA chiếu -->
+                                    @if($booking->status === 'confirmed' && $booking->showtime->start_time > now())
+                                        <a href="{{ route('booking.ticket', $booking->id) }}" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-[#D82D8B] text-white rounded-lg hover:bg-[#A50064] transition-colors font-medium text-sm">
                                             <i class="fas fa-ticket-alt mr-2"></i>Xem vé điện tử
                                         </a>
-                                        <button onclick="printTicket({{ $booking->id }})" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                                        <button onclick="printTicket({{ $booking->id }})" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm">
                                             <i class="fas fa-print mr-2"></i>In vé
                                         </button>
-                                        <button onclick="cancelBooking({{ $booking->id }})" class="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors">
+                                        <button onclick="cancelBooking({{ $booking->id }})" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium text-sm">
                                             <i class="fas fa-times mr-2"></i>Hủy vé
                                         </button>
+                                    
+                                    <!-- Vé đang CHỜ THANH TOÁN -->
                                     @elseif($booking->status === 'pending')
-                                        <a href="{{ route('payment.page', $booking->id) }}" class="inline-flex items-center px-4 py-2 bg-[#D82D8B] text-white rounded-lg hover:bg-[#A50064] transition-colors">
+                                        <a href="{{ route('payment.page', $booking->id) }}" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm">
                                             <i class="fas fa-credit-card mr-2"></i>Thanh toán ngay
                                         </a>
                                     @endif
-                                    <a href="mailto:support@aeoncinema.vn?subject=Hỗ trợ đặt vé {{ $ticketCode }}" class="inline-flex items-center px-4 py-2 bg-[#D82D8B] text-white rounded-lg hover:bg-[#A50064] transition-colors">
-                                        <i class="fas fa-envelope mr-2"></i>Liên hệ hỗ trợ
+
+                                    <!-- Nút chung hiển thị cho tất cả trạng thái -->
+                                    <a href="mailto:support@aeoncinema.vn?subject=Hỗ trợ đặt vé {{ $ticketCode }}" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm">
+                                        <i class="fas fa-envelope mr-2"></i>Hỗ trợ
+                                    </a>
+                                    <a href="{{ route('showtimes', $booking->showtime->movie_id) }}" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors font-medium text-sm">
+                                        <i class="fas fa-film mr-2"></i>Đặt tiếp phim này
                                     </a>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                     @endforeach
@@ -275,24 +302,32 @@
             </div>
 
             <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-                <p>&copy; 2024 AEON Cinema. Tất cả quyền được bảo lưu.</p>
+                <p>&copy; 2026 AEON Cinema. Tất cả quyền được bảo lưu.</p>
             </div>
         </div>
     </footer>
 
+    <!-- JavaScript Handling -->
     <script>
     function printTicket(bookingId) {
-        // Open print dialog or redirect to print page
         window.open(`/booking/${bookingId}/print`, '_blank');
     }
 
     function cancelBooking(bookingId) {
         if (confirm('Bạn có chắc chắn muốn hủy vé này?')) {
-            // Submit cancellation form
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/booking/${bookingId}/cancel`;
-            form.innerHTML = '@csrf';
+            
+            // Lấy token bảo mật từ thẻ meta đã khai báo ở trên head
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = token;
+            
+            form.appendChild(csrfInput);
             document.body.appendChild(form);
             form.submit();
         }
