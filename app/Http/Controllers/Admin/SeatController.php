@@ -107,6 +107,13 @@ class SeatController extends Controller
         return back()->with('error', 'Admin tổng không dùng chức năng này .');
     }
 
+        // QUAN TRỌNG: Check branch_id GỐC của ghế trước khi cho sửa (chặn IDOR)
+        // Nếu thiếu dòng này, Partner role 2 có thể sửa ghế của chi nhánh khác
+        // miễn là họ gửi branch_id của chính họ trong form.
+        if (Auth::user()->role == 2 && $seat->branch_id != Auth::user()->branch_id) {
+            return back()->with('error', 'Bạn không có quyền sửa ghế này.');
+        }
+
         $validated = $request->validate([
             'branch_id' => 'required|exists:branches,id',
             'row' => 'required|string|max:10',

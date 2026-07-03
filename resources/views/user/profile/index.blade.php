@@ -114,6 +114,77 @@
                         </div>
                     @endif
                 </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="font-bold text-lg text-gray-800 mb-6 flex items-center">
+                        <i class="fa-solid fa-utensils mr-2 text-[#a61d6d]"></i> Lịch sử đặt bàn nhà hàng
+                    </h2>
+
+                    @if($restaurantBookings->isEmpty())
+                        <div class="text-center py-10 border-2 border-dashed border-gray-100 rounded-xl">
+                            <p class="text-gray-400">Bạn chưa đặt bàn nhà hàng nào.</p>
+                            <a href="{{ route('restaurants.index') }}" class="text-[#a61d6d] font-bold text-sm hover:underline mt-2 inline-block">ĐẶT BÀN NGAY</a>
+                        </div>
+                    @else
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-gray-50 text-gray-600 uppercase text-[10px]">
+                                    <tr>
+                                        <th class="px-4 py-3">Nhà hàng</th>
+                                        <th class="px-4 py-3">Ngày / Giờ đến</th>
+                                        <th class="px-4 py-3">Món đặt trước</th>
+                                        <th class="px-4 py-3 text-right">Tổng tiền</th>
+                                        <th class="px-4 py-3 text-center">Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    @foreach($restaurantBookings as $booking)
+                                    <tr class="hover:bg-pink-50 transition-colors cursor-pointer group"
+                                        onclick="window.location='{{ route('booking.success', $booking->id) }}'">
+
+                                        <td class="px-4 py-4 font-bold text-[#a61d6d] group-hover:underline">
+                                            {{ $booking->restaurant->name ?? 'Nhà hàng' }}
+                                        </td>
+
+                                        <td class="px-4 py-4 text-gray-500">
+                                            {{ \Carbon\Carbon::parse($booking->booking_date)->format('d/m/Y') }} - {{ $booking->booking_time }}
+                                        </td>
+
+                                        <td class="px-4 py-4 max-w-[200px] truncate">
+                                            @if($booking->items && $booking->items->count() > 0)
+                                                @foreach($booking->items as $item)
+                                                    {{ $item->menuItem->name ?? 'Món ăn' }} x{{ $item->quantity }}{{ !$loop->last ? ',' : '' }}
+                                                @endforeach
+                                            @else
+                                                <span class="text-gray-400 italic text-xs">Không đặt món trước</span>
+                                            @endif
+                                        </td>
+
+                                        <td class="px-4 py-4 text-right font-bold">
+                                            {{ number_format($booking->total_amount, 0, ',', '.') }}đ
+                                        </td>
+
+                                        <td class="px-4 py-4 text-center">
+                                            @php
+                                                $statusMap = [
+                                                    'pending'   => ['Chờ xác nhận', 'bg-orange-100 text-orange-600'],
+                                                    'confirmed' => ['Đã xác nhận', 'bg-green-100 text-green-600'],
+                                                    'cancelled' => ['Đã hủy', 'bg-red-100 text-red-600'],
+                                                    'completed' => ['Hoàn thành', 'bg-blue-100 text-blue-600'],
+                                                ];
+                                                [$label, $class] = $statusMap[$booking->status] ?? [$booking->status, 'bg-gray-100 text-gray-600'];
+                                            @endphp
+                                            <span class="px-2 py-1 rounded-full text-[10px] font-bold {{ $class }}">
+                                                {{ strtoupper($label) }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </div>

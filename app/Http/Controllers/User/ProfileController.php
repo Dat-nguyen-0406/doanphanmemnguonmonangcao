@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Models\User;
 use App\Models\Order;
+use App\Models\RestaurantBooking;
 
 class ProfileController extends Controller
 {
@@ -21,8 +22,14 @@ class ProfileController extends Controller
                     ->where('user_id', $user->id)
                     ->latest()
                     ->get();
+
+        // Lịch sử đặt bàn nhà hàng (kèm món ăn đã đặt trước)
+        $restaurantBookings = RestaurantBooking::with(['restaurant', 'table', 'items.menuItem'])
+                    ->where('user_id', $user->id)
+                    ->latest()
+                    ->get();
         
-        return view('user.profile.index', compact('user', 'orders'));
+        return view('user.profile.index', compact('user', 'orders', 'restaurantBookings'));
     }
 
     public function update(Request $request) 

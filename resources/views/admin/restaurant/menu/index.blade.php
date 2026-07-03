@@ -19,7 +19,7 @@
     {{-- FORM THÊM MÓN --}}
     <div class="bg-white rounded-2xl shadow-sm p-6">
         <h2 class="text-base font-black text-gray-700 mb-4">+ Thêm món mới</h2>
-        <form action="{{ route('admin.restaurant.menu.store', $restaurant->id) }}" method="POST" class="space-y-4">
+        <form action="{{ route('admin.restaurant.menu.store', $restaurant->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
             @csrf
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tên món *</label>
@@ -45,11 +45,46 @@
                 <textarea name="description" rows="2" placeholder="Mô tả ngắn về món ăn..."
                           class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:border-pink-500 outline-none resize-none"></textarea>
             </div>
+
+            {{-- ẢNH - File picker (kéo-thả, giống form chỉnh sửa nhà hàng) --}}
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL ảnh</label>
-                <input type="url" name="image_url" placeholder="https://..."
-                       class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:border-pink-500 outline-none">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Ảnh món ăn</label>
+
+                <div id="image-drop-zone"
+                     class="relative w-full border-2 border-dashed border-gray-300 rounded-xl
+                            flex flex-col items-center justify-center gap-2
+                            hover:border-pink-400 hover:bg-pink-50 transition-all"
+                     style="min-height: 140px;">
+
+                    <img id="image-preview" src="" alt="Preview" class="hidden w-full h-36 object-cover rounded-xl">
+
+                    <div id="image-placeholder"
+                         onclick="document.getElementById('image_file').click()"
+                         class="flex flex-col items-center gap-2 py-5 cursor-pointer w-full">
+                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-300"></i>
+                        <p class="text-xs font-bold text-gray-400">Nhấn để chọn ảnh</p>
+                        <p class="text-[10px] text-gray-300">JPG, PNG · Tối đa 5MB</p>
+                    </div>
+
+                    <button type="button" id="image-change-btn"
+                            onclick="document.getElementById('image_file').click()"
+                            class="hidden absolute bottom-2 right-2 bg-white/90 hover:bg-white text-gray-600 text-xs font-bold px-3 py-1.5 rounded-lg shadow border border-gray-200 transition">
+                        <i class="fa-solid fa-pen mr-1"></i> Đổi ảnh
+                    </button>
+                </div>
+
+                <input type="file" id="image_file" name="image"
+                       accept="image/jpeg,image/png,image/jpg,image/webp" class="hidden">
+
+                <p id="image-filename" class="text-xs text-gray-400 mt-1.5 hidden">
+                    <i class="fa-solid fa-paperclip mr-1"></i><span></span>
+                </p>
+
+                @error('image')
+                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                @enderror
             </div>
+
             <div class="flex items-center gap-2">
                 <input type="checkbox" name="is_available" id="is_available" checked class="w-4 h-4 accent-pink-600">
                 <label for="is_available" class="text-sm text-gray-600">Đang phục vụ</label>
@@ -76,7 +111,7 @@
                         <td class="px-5 py-3">
                             <div class="flex items-center gap-3">
                                 @if($item->image_url)
-                                    <img src="{{ $item->image_url }}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;">
+                                    <img src="{{ \Illuminate\Support\Str::startsWith($item->image_url, ['http://', 'https://']) ? $item->image_url : asset('storage/' . $item->image_url) }}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;">
                                 @else
                                     <div style="width:40px;height:40px;border-radius:8px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:18px;">🍽</div>
                                 @endif
@@ -124,4 +159,51 @@
         @endif
     </div>
 </div>
+
+<script>
+const input    = document.getElementById('image_file');
+const preview  = document.getElementById('image-preview');
+const holder   = document.getElementById('image-placeholder');
+const changeBtn= document.getElementById('image-change-btn');
+const filename = document.getElementById('image-filename');
+const dropZone = document.getElementById('image-drop-zone');
+
+input.addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    showPreview(file);
+});
+
+dropZone.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    this.classList.add('border-pink-400', 'bg-pink-50');
+});
+dropZone.addEventListener('dragleave', function () {
+    this.classList.remove('border-pink-400', 'bg-pink-50');
+});
+dropZone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    this.classList.remove('border-pink-400', 'bg-pink-50');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        showPreview(file);
+    }
+});
+
+function showPreview(file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        preview.src = e.target.result;
+        preview.classList.remove('hidden');
+        holder.classList.add('hidden');
+        changeBtn.classList.remove('hidden');
+        filename.classList.remove('hidden');
+        filename.querySelector('span').textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
+    };
+    reader.readAsDataURL(file);
+}
+</script>
 @endsection

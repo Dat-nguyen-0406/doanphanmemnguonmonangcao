@@ -15,10 +15,12 @@ class BookingController extends Controller
     /**
      * Lấy danh sách tất cả bookings (API)
      */
-    public function index()
-    {
-        return Booking::with('user', 'showtime.movie', 'seats')->get();
-    }
+    /**
+     * ĐÃ XÓA: index() cũ trả về Booking::all() không phân trang, không lọc theo
+     * user, không yêu cầu auth — nếu bị route hoá sẽ dump toàn bộ booking của
+     * mọi khách hàng. Dùng BookingApiController::myBookings() (đã có auth +
+     * lọc theo user_id) cho mục đích tương đương.
+     */
 
     /**
      * Tạo booking mới (Form-based)

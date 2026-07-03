@@ -9,6 +9,7 @@ use App\Models\RestaurantBookingItem;
 use App\Models\RestaurantMenuItem;
 use App\Models\RestaurantTable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -29,6 +30,71 @@ class RestaurantController extends Controller
         $restaurants = $query->get();
         $cuisineTypes = Restaurant::where('is_active', true)->distinct()->pluck('cuisine_type')->filter()->values();
         return view('restaurants.index', compact('restaurants', 'branches', 'cuisineTypes'));
+    }
+
+   // HÀM THÊM MỚI NHÀ HÀNG
+    public function store(Request $request)
+    {
+        $request->validate([
+            'branch_id'    => 'required|exists:branches,id',
+            'name'         => 'required|string|max:255',
+            'cuisine_type' => 'nullable|string|max:255',
+            'description'  => 'nullable|string',
+            'image'        => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
+
+        $data = $request->except('image');
+        $data['is_active'] = $request->has('is_active') ? true : false;
+
+        // Xử lý upload ảnh vào storage/app/public/restaurants
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('restaurants', $filename, 'public');
+            $data['image_url'] = $path; // Lưu đường dẫn tương đối để đồng bộ asset()
+        }
+
+        Restaurant::create($data);
+
+        return redirect()->route('admin.restaurant.index')->with('success', 'Thêm nhà hàng thành công!');
+    }
+
+    // HÀM CẬP NHẬT NHÀ HÀNG (FIX TRIỆT ĐỂ LỖI MẤT ẢNH)
+    public function update(Request $request, $id)
+    {
+        $restaurant = Restaurant::findOrFail($id);
+
+        $request->validate([
+            'branch_id'    => 'required|exists:branches,id',
+            'name'         => 'required|string|max:255',
+            'cuisine_type' => 'nullable|string|max:255',
+            'description'  => 'nullable|string',
+            'image'        => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
+
+        $data = $request->except('image');
+        $data['is_active'] = $request->has('is_active') ? true : false;
+
+        // Xử lý cập nhật ảnh
+        if ($request->hasFile('image')) {
+            // Xóa ảnh cũ nếu tồn tại trong disk public để tránh rác storage
+            if ($restaurant->image_url && \Illuminate\Support\Facades\Storage::disk('public')->exists($restaurant->image_url)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($restaurant->image_url);
+            }
+
+            // Lưu ảnh mới
+            $file = $request->file('image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('restaurants', $filename, 'public');
+            $data['image_url'] = $path;
+        } else {
+            // QUAN TRỌNG: Giữ nguyên ảnh cũ nếu không cập nhật ảnh mới
+            $data['image_url'] = $restaurant->image_url;
+        }
+
+        $restaurant->update($data);
+
+        return redirect()->route('admin.restaurant.index')->with('success', 'Cập nhật nhà hàng thành công!');
     }
 
     // FORM ĐẶT BÀN
@@ -177,6 +243,7 @@ class RestaurantController extends Controller
     public function showPayment($id)
     {
         $booking = RestaurantBooking::with(['restaurant', 'table', 'items.menuItem'])->findOrFail($id);
+        abort_if($booking->user_id !== Auth::id(), 403, 'Bạn không có quyền xem booking này.');
         return view('restaurants.payment', compact('booking'));
     }
 
@@ -184,6 +251,7 @@ class RestaurantController extends Controller
     public function processVnPay(Request $request, $id)
     {
         $booking = RestaurantBooking::findOrFail($id);
+        abort_if($booking->user_id !== Auth::id(), 403, 'Bạn không có quyền thanh toán booking này.');
 
         $vnp_Url        = env('VNPAY_URL');
         $vnp_Returnurl  = route('booking.vnpay.return');
@@ -279,6 +347,7 @@ class RestaurantController extends Controller
     public function showSuccess($id)
     {
         $booking = RestaurantBooking::with(['restaurant', 'table', 'items.menuItem'])->findOrFail($id);
+        abort_if($booking->user_id !== Auth::id(), 403, 'Bạn không có quyền xem booking này.');
         return view('restaurants.success', compact('booking'));
     }
 }

@@ -1,4 +1,5 @@
 @extends('layouts.shop')
+@php use Illuminate\Support\Str; @endphp
 
 @section('content')
 <div style="max-width:1200px;margin:0 auto;padding:20px 16px;">
@@ -12,7 +13,11 @@
 
     {{-- HEADER --}}
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
-        <img src="{{ $restaurant->image_url ?? asset('images/aeon-logo.png') }}"
+        <img src="{{ $restaurant->image_url
+                    ? (Str::startsWith($restaurant->image_url, ['http://', 'https://'])
+                        ? $restaurant->image_url
+                        : asset('storage/' . $restaurant->image_url))
+                    : asset('images/aeon-logo.png') }}"
              alt="{{ $restaurant->name }}"
              style="width:72px;height:72px;border-radius:12px;object-fit:cover;border:2px solid #eee;">
         <div>
@@ -205,8 +210,11 @@
                     @foreach($items as $idx => $item)
                     <div style="display:flex;align-items:center;gap:12px;padding:12px;border:1.5px solid #f0f0f0;border-radius:12px;transition:border-color .2s;" class="menu-card">
                         @if($item->image_url)
-                        <img src="{{ $item->image_url }}" alt="{{ $item->name }}"
-                             style="width:60px;height:60px;border-radius:8px;object-fit:cover;flex-shrink:0;">
+                        <img src="{{ Str::startsWith($item->image_url, ['http://', 'https://'])
+                                        ? $item->image_url
+                                        : asset('storage/' . $item->image_url) }}" alt="{{ $item->name }}"
+                             style="width:60px;height:60px;border-radius:8px;object-fit:cover;flex-shrink:0;"
+                             onerror="this.style.display='none'; this.nextElementSibling && (this.nextElementSibling.style.display='flex')">
                         @else
                         <div style="width:60px;height:60px;border-radius:8px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px;">
                             🍽

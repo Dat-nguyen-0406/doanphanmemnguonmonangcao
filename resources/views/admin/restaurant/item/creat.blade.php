@@ -35,64 +35,54 @@
             {{-- Tên nhà hàng --}}
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Tên nhà hàng *</label>
-                <input type="text" name="name" value="{{ old('name') }}" required
-                       placeholder="VD: Nhà hàng Nhật Bản Sakura..."
+                <input type="text" name="name" value="{{ old('name') }}" required placeholder="Nhập tên nhà hàng..."
                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-pink-500 outline-none">
             </div>
 
             {{-- Loại ẩm thực --}}
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Loại hình ẩm thực</label>
-                <input type="text" name="cuisine_type" value="{{ old('cuisine_type') }}"
-                       placeholder="VD: Nhật Bản, Lẩu, BBQ, Hàn Quốc..."
+                <input type="text" name="cuisine_type" value="{{ old('cuisine_type') }}" placeholder="Ví dụ: Lẩu nướng, Món Nhật, Fastfood..."
                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-pink-500 outline-none">
             </div>
 
             {{-- Mô tả --}}
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mô tả</label>
-                <textarea name="description" rows="3" placeholder="Mô tả ngắn về nhà hàng..."
-                          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-pink-500 outline-none resize-none">{{ old('description') }}</textarea>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mô tả nhà hàng</label>
+                <textarea name="description" rows="4" placeholder="Nhập thông tin giới thiệu ngắn về nhà hàng..."
+                          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-pink-500 outline-none">{{ old('description') }}</textarea>
             </div>
 
-            {{-- ẢNH - File picker --}}
+            {{-- ẢNH - File picker (ĐÃ FIX: Bỏ onclick ở div cha) --}}
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Ảnh đại diện</label>
 
-                {{-- Vùng drop / click để chọn file --}}
                 <div id="image-drop-zone"
-                     onclick="document.getElementById('image_file').click()"
                      class="relative w-full border-2 border-dashed border-gray-300 rounded-xl
-                            flex flex-col items-center justify-center gap-2 cursor-pointer
+                            flex flex-col items-center justify-center gap-2
                             hover:border-pink-400 hover:bg-pink-50 transition-all"
                      style="min-height: 160px;">
 
-                    {{-- Preview (ẩn ban đầu) --}}
-                    <img id="image-preview"
-                         src="" alt="Preview"
-                         class="hidden w-full h-40 object-cover rounded-xl">
+                    <img id="image-preview" src="" alt="Preview" class="hidden w-full h-40 object-cover rounded-xl">
 
-                    {{-- Placeholder --}}
-                    <div id="image-placeholder" class="flex flex-col items-center gap-2 py-6">
+                    <div id="image-placeholder" 
+                         onclick="document.getElementById('image_file').click()"
+                         class="flex flex-col items-center gap-2 py-6 cursor-pointer w-full">
                         <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-300"></i>
                         <p class="text-sm font-bold text-gray-400">Nhấn để chọn ảnh</p>
                         <p class="text-xs text-gray-300">JPG, PNG · Tối đa 5MB</p>
                     </div>
 
-                    {{-- Nút đổi ảnh (hiện khi đã chọn) --}}
                     <button type="button" id="image-change-btn"
-                            class="hidden absolute bottom-2 right-2 bg-white/90 hover:bg-white
-                                   text-gray-600 text-xs font-bold px-3 py-1.5 rounded-lg shadow
-                                   border border-gray-200 transition">
+                            onclick="document.getElementById('image_file').click()"
+                            class="hidden absolute bottom-2 right-2 bg-white/90 hover:bg-white text-gray-600 text-xs font-bold px-3 py-1.5 rounded-lg shadow border border-gray-200 transition">
                         <i class="fa-solid fa-pen mr-1"></i> Đổi ảnh
                     </button>
                 </div>
 
-                {{-- Input file ẩn --}}
-                <input type="file" id="image_file" name="image" accept="image/jpeg,image/png,image/jpg,image/webp"
-                       class="hidden">
+                <input type="file" id="image_file" name="image" required
+                       accept="image/jpeg,image/png,image/jpg,image/webp" class="hidden">
 
-                {{-- Tên file đã chọn --}}
                 <p id="image-filename" class="text-xs text-gray-400 mt-1.5 hidden">
                     <i class="fa-solid fa-paperclip mr-1"></i><span></span>
                 </p>
@@ -102,17 +92,24 @@
                 @enderror
             </div>
 
-            {{-- Trạng thái --}}
-            <div class="flex items-center gap-3">
+            {{-- Trạng thái hoạt động --}}
+            <div class="flex items-center gap-2 pt-2">
                 <input type="checkbox" name="is_active" id="is_active" value="1" checked
-                       class="w-4 h-4 accent-pink-600">
-                <label for="is_active" class="text-sm text-gray-700">Đang hoạt động</label>
+                       class="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500">
+                <label for="is_active" class="text-sm font-bold text-gray-700 cursor-pointer select-none">Đang hoạt động</label>
             </div>
 
-            <button type="submit"
-                    class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3.5 rounded-xl text-sm transition">
-                + Thêm nhà hàng
-            </button>
+            {{-- HÀNH ĐỘNG --}}
+            <div class="pt-4 flex items-center justify-end gap-3 border-t border-gray-100">
+                <a href="{{ route('admin.restaurant.index') }}"
+                   class="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-50 transition">
+                    Hủy
+                </a>
+                <button type="submit"
+                        class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-pink-600 hover:bg-pink-700 shadow-sm shadow-pink-100 transition">
+                    Lưu nhà hàng
+                </button>
+            </div>
         </form>
     </div>
 </div>
@@ -129,11 +126,6 @@ input.addEventListener('change', function () {
     const file = this.files[0];
     if (!file) return;
     showPreview(file);
-});
-
-changeBtn.addEventListener('click', function (e) {
-    e.stopPropagation();
-    input.click();
 });
 
 // Drag & drop
@@ -169,4 +161,4 @@ function showPreview(file) {
     reader.readAsDataURL(file);
 }
 </script>
-@endsection 
+@endsection

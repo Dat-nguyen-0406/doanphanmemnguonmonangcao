@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User\Shop;
 use App\Http\Controllers\Controller;
 
 use App\Models\Product;
+use App\Models\Order;
 use App\Models\Category;
 use App\Models\Branch;
 use Illuminate\Http\Request;
@@ -73,7 +74,7 @@ class PartnerShopController extends Controller
             'stock' => 'required|integer|min:0',
             'category_id' => 'required|exists:categories,id',
             'branch_id' => 'required|exists:branches,id',
-            'image' => 'nullable|file|max:5120',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
         ]);
 
         $data = $request->all();
@@ -187,4 +188,93 @@ class PartnerShopController extends Controller
 
         return back()->with('success', 'Đã xóa sản phẩm khỏi kho hàng!');
     }
+
+   public function orders(Request $request)
+{
+    $user = Auth::user();
+
+    // 1. Khởi tạo Query lấy Đơn hàng kèm thông tin khách đặt đơn
+    $query = Order::with(['user']);
+
+    // 2. PHÂN QUYỀN: Nếu KHÔNG PHẢI Admin tối cao (role != 1), tức là Shop Partner (role == 4)
+    // Chỉ lấy các đơn hàng chứa sản phẩm thuộc quyền sở hữu của chính Shop đó
+    if ($user->role != 1) {
+        $query->whereHas('orderDetails.product', function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        })->with(['orderDetails' => function ($q) use ($user) {
+            // Bảo mật: Chỉ load chân rết sản phẩm thuộc quyền sở hữu của Shop này
+            $q->whereHas('product', function ($pQ) use ($user) {
+                $pQ->where('user_id', $user->id);
+            })->with('product');
+        }]);
+    } else {
+        // Nếu là Admin: Load toàn bộ chi tiết sản phẩm không giới hạn
+        $query->with('orderDetails.product');
+    }
+
+    // 3. BỘ LỌC ĐỒNG BỘ: Lọc theo Danh mục sản phẩm nằm trong đơn
+    if ($request->filled('category_id')) {
+        $query->whereHas('orderDetails.product', function ($q) use ($request) {
+            $q->where('category_id', $request->category_id);
+        });
+    }
+
+    // 4. BỘ LỌC ĐỒNG BỘ: Lọc theo Chi nhánh AEON phát sinh đơn
+    if ($request->filled('branch_id')) {
+        $query->whereHas('orderDetails.product', function ($q) use ($request) {
+            $q->where('branch_id', $request->branch_id);
+        });
+    }
+
+    // 5. BỘ LỌC ĐỒNG BỘ: Tìm kiếm theo Mã Đơn hàng hoặc Tên Khách hàng đặt
+    if ($request->filled('search')) {
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            $q->where('id', $search)
+              ->orWhereHas('user', function ($uQ) use ($search) {
+                  $uQ->where('name', 'LIKE', '%' . $search . '%');
+              });
+        });
+    }
+
+    // Lấy dữ liệu phân trang
+    $orders = $query->latest()->paginate(15);
+
+    // Lấy danh sách danh mục và chi nhánh để nạp vào Select Box ở Giao diện
+    $categories = Category::all();
+    $branches = Branch::all();
+
+    return view('admin.shop.orders', compact('orders', 'categories', 'branches'));
+}
+
+/**
+ * Xử lý cập nhật trạng thái đơn hàng cho từng Shop
+ */
+public function updateStatus(Request $request, $id)
+{
+    $request->validate([
+        'status' => 'required|in:pending,paid,shipping,completed,cancelled'
+    ]);
+
+    $order = Order::findOrFail($id);
+    $user = Auth::user();
+
+    // Bảo mật: Nếu là Shop Partner (role = 4), check xem đơn này có thực sự chứa sản phẩm của mình không
+    if ($user->role != 1) {
+        $hasProduct = DB::table('order_details')
+            ->join('products', 'order_details.product_id', '=', 'products.id')
+            ->where('order_details.order_id', $id)
+            ->where('products.user_id', $user->id)
+            ->exists();
+
+        if (!$hasProduct) {
+            return back()->with('error', 'Bạn không có quyền quản lý đơn hàng này!');
+        }
+    }
+
+    $order->status = $request->status;
+    $order->save();
+
+    return back()->with('success', 'Cập nhật trạng thái đơn hàng #' . $id . ' thành công!');
+}
 }

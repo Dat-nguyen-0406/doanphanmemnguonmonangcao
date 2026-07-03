@@ -91,16 +91,22 @@
                     <span class="text-xs font-bold px-2.5 py-1 rounded-full {{ $cls }}">{{ $lbl }}</span>
                 </td>
                 <td class="px-5 py-3 text-center">
-                    <form action="{{ route('admin.restaurant.bookings.status', $b->id) }}" method="POST" class="inline-flex items-center gap-1">
-                        @csrf @method('PATCH')
-                        <select name="status" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white outline-none">
-                            <option value="pending" {{ $b->status == 'pending' ? 'selected' : '' }}>⏳ Chờ TT</option>
-                            <option value="confirmed" {{ $b->status == 'confirmed' ? 'selected' : '' }}>✅ Xác nhận</option>
-                            <option value="completed" {{ $b->status == 'completed' ? 'selected' : '' }}>🎉 Hoàn thành</option>
-                            <option value="cancelled" {{ $b->status == 'cancelled' ? 'selected' : '' }}>❌ Hủy</option>
-                        </select>
-                        <button type="submit" class="text-xs bg-pink-100 text-pink-700 hover:bg-pink-600 hover:text-white font-bold px-2 py-1 rounded-lg transition">Lưu</button>
-                    </form>
+                    @if(Auth::user()->role == 1)
+                        {{-- LÀ ADMIN TỔNG: ẨN HOÀN TOÀN FORM THAY ĐỔI TRẠNG THÁI --}}
+                        <span class="text-xs text-gray-400 italic"><i class="fa-solid fa-eye mr-1"></i> Chỉ xem</span>
+                    @else
+                        {{-- NẾU LÀ ĐỐI TÁC QUÁN ĂN (ROLE KHÁC 1): Cho phép cập nhật trạng thái đơn hàng --}}
+                        <form action="{{ route('admin.restaurant.bookings.status', $b->id) }}" method="POST" class="inline-flex items-center gap-1">
+                            @csrf @method('PATCH')
+                            <select name="status" class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white outline-none">
+                                <option value="pending" {{ $b->status == 'pending' ? 'selected' : '' }}>⏳ Chờ TT</option>
+                                <option value="confirmed" {{ $b->status == 'confirmed' ? 'selected' : '' }}>✅ Xác nhận</option>
+                                <option value="completed" {{ $b->status == 'completed' ? 'selected' : '' }}>🎉 Hoàn thành</option>
+                                <option value="cancelled" {{ $b->status == 'cancelled' ? 'selected' : '' }}>❌ Hủy</option>
+                            </select>
+                            <button type="submit" class="text-xs bg-pink-100 text-pink-700 hover:bg-pink-600 hover:text-white font-bold px-2 py-1 rounded-lg transition">Lưu</button>
+                        </form>
+                    @endif
                 </td>
             </tr>
             @empty

@@ -12,16 +12,23 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    /**
+     * QUAN TRỌNG: 'role' và 'branch_id' KHÔNG được đặt trong $fillable.
+     * Nếu để trong $fillable, người dùng có thể tự gửi role=1 (Admin)
+     * trong form đăng ký để leo thang đặc quyền (mass assignment / privilege escalation).
+     * Hai trường này chỉ được set thủ công qua $user->role = ... ở AuthController::changeRole()
+     * — không bao giờ qua ::create($request->all()) hoặc tương tự.
+     */
     protected $fillable = [
         'name',
         'email',
         'password',
         'phone',
         'address',
-        'role',
         'image',     // từ kethop (avatar profile)
-        'branch_id', // từ doanphanmem (Cinema Partner liên kết chi nhánh)
     ];
+
+    protected $guarded = ['role', 'branch_id'];
 
     protected $hidden = [
         'password',

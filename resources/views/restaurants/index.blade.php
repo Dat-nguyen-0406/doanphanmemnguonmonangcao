@@ -1,4 +1,5 @@
 @extends('layouts.shop')
+@php use Illuminate\Support\Str; @endphp
 
 @section('title', 'Khu Ẩm Thực AEON')
 
@@ -84,7 +85,11 @@
 
             {{-- ẢNH --}}
             <div style="position:relative;overflow:hidden;">
-                <img src="{{ $restaurant->image_url ?? asset('images/aeon-logo.png') }}"
+                <img src="{{ $restaurant->image_url
+                    ? (Str::startsWith($restaurant->image_url, ['http://', 'https://'])
+                        ? $restaurant->image_url
+                        : asset('storage/' . $restaurant->image_url))
+                    : asset('images/aeon-logo.png') }}"
                      alt="{{ $restaurant->name }}"
                      style="width:100%;height:200px;object-fit:cover;transition:transform .4s;"
                      class="restaurant-img">

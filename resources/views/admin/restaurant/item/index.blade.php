@@ -14,10 +14,15 @@
             @endif
         </p>
     </div>
-    <a href="{{ route('admin.restaurant.create') }}"
-       class="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-orange-500 transition-all shadow-lg flex items-center gap-2 w-fit">
-        <i class="fa-solid fa-plus"></i> THÊM NHÀ HÀNG
+    @if(Auth::user()->role != 1)
+    <a href="{{ route('admin.restaurant.create') }}" class="bg-pink-600 text-white px-4 py-2 rounded-xl text-sm font-bold">
+        + Thêm nhà hàng
     </a>
+@else
+    <div class="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-2 rounded-xl text-sm font-bold">
+        <i class="fa-solid fa-eye mr-1"></i> Chế độ xem hệ thống
+    </div>
+@endif
 </div>
 
 {{-- FLASH MESSAGE --}}
@@ -60,12 +65,11 @@
             <thead class="bg-slate-50 border-b border-slate-100">
                 <tr>
                     <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Nhà hàng</th>
-                    <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Chi nhánh</th>
                     <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Loại ẩm thực</th>
                     <th class="px-5 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Số bàn</th>
                     <th class="px-5 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Đặt bàn</th>
                     <th class="px-5 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Trạng thái</th>
-                    <th class="px-5 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Thao tác</th>
+                    <th class="px-5 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Thao tác</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 bg-white">
@@ -73,13 +77,18 @@
     <tr class="hover:bg-slate-50/80 transition-colors">
         <td class="px-5 py-4">
             <div class="flex items-center gap-3">
-                @if($r->image_url)
-                    <img src="{{ $r->image_url }}" class="w-11 h-11 rounded-xl object-cover shadow-sm bg-gray-100">
-                @else
-                    <div class="w-11 h-11 rounded-xl bg-pink-50 text-pink-500 flex items-center justify-center font-bold text-sm">
-                        {{ Str::upper(Str::substr($r->name, 0, 2)) }}
-                    </div>
+                {{-- ĐÃ SỬA: KIỂM TRA ĐIỀU KIỆN ẢNH VÀ ĐƯỜNG DẪN CHUẨN STORAGE --}}
+                @if(!empty($r->image_url))
+                    <img src="{{ Str::startsWith($r->image_url, ['http://', 'https://']) ? $r->image_url : asset('storage/' . $r->image_url) }}" 
+                         class="w-11 h-11 rounded-xl object-cover shadow-sm bg-gray-100" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                 @endif
+                
+                {{-- Khối render chữ cái đầu làm Avatar dự phòng --}}
+                <div class="{{ !empty($r->image_url) ? 'hidden' : '' }} w-11 h-11 rounded-xl bg-pink-50 text-pink-500 flex items-center justify-center font-bold text-sm select-none">
+                    {{ Str::upper(Str::substr($r->name, 0, 2)) }}
+                </div>
+                
                 <div>
                     <span class="font-bold text-gray-800 text-sm block">{{ $r->name }}</span>
                     <span class="text-[11px] text-gray-400 block mt-0.5"><i class="fa-solid fa-location-dot mr-0.5"></i> {{ $r->branch->name ?? 'Chưa xác định' }}</span>
@@ -113,49 +122,25 @@
         <td class="px-5 py-4">
             <div class="flex items-center justify-end gap-2">
                 @if(Auth::user()->role == 1)
-                    {{-- NẾU LÀ ADMIN TỔNG ĐANG CLICK TỪ SIDEBAR XEM BÀN / MENU --}}
-                    @if(request()->query('section') == 'tables')
-                        <a href="{{ route('admin.restaurant.tables', $r->id) }}" 
-                           class="px-3 py-1.5 rounded-xl bg-pink-50 text-pink-600 hover:bg-pink-600 hover:text-white text-xs font-bold transition flex items-center gap-1">
-                            <i class="fa-solid fa-chair text-[10px]"></i> Xem Sơ Đồ Bàn
-                        </a>
-                    @elseif(request()->query('section') == 'menu')
-                        <a href="{{ route('admin.restaurant.menu', $r->id) }}" 
-                           class="px-3 py-1.5 rounded-xl bg-pink-50 text-pink-600 hover:bg-pink-600 hover:text-white text-xs font-bold transition flex items-center gap-1">
-                            <i class="fa-solid fa-book-open text-[10px]"></i> Xem Thực Đơn
-                        </a>
-                    @else
-                        {{-- Chế độ tổng quan bình thường của Admin: hiển thị các nút điều hướng cơ bản --}}
-                        <a href="{{ route('admin.restaurant.tables', $r->id) }}" title="Xem Bàn"
-                           class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-pink-600 hover:text-white text-slate-600 flex items-center justify-center transition">
-                            <i class="fa-solid fa-table-cells-large text-xs"></i>
-                        </a>
-                        <a href="{{ route('admin.restaurant.menu', $r->id) }}" title="Xem Menu"
-                           class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-pink-600 hover:text-white text-slate-600 flex items-center justify-center transition">
-                            <i class="fa-solid fa-book-open text-xs"></i>
-                        </a>
-                        <a href="{{ route('admin.restaurant.edit', $r->id) }}" title="Sửa nhà hàng"
-                           class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center transition">
-                            <i class="fa-solid fa-pen text-xs"></i>
-                        </a>
-                        <form action="{{ route('admin.restaurant.destroy', $r->id) }}" method="POST" onsubmit="return confirm('Xoá nhà hàng này?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" title="Xoá" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition">
-                                <i class="fa-solid fa-trash text-xs"></i>
-                            </button>
-                        </form>
-                    @endif
+                    {{-- LÀ ADMIN TỔNG: ẨN TOÀN BỘ NÚT, CHỈ HIỂN THỊ DÒNG CHỮ NHẮC NHỞ HOẶC ĐỂ TRỐNG --}}
+                    <span class="text-xs text-gray-400 italic"><i class="fa-solid fa-eye mr-1"></i> Chỉ xem</span>
                 @else
-                    {{-- NẾU LÀ ĐỐI TÁC QUÁN ĂN (ROLE 3): Có đầy đủ tính năng thêm/sửa/xoá của riêng họ --}}
-                    <a href="{{ route('admin.restaurant.tables', $r->id) }}" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition">
+                    {{-- NẾU LÀ ĐỐI TÁC QUÁN ĂN (ROLE KHÁC 1): Có đầy đủ tính năng thêm/sửa/xoá --}}
+                    <a href="{{ route('admin.restaurant.tables', $r->id) }}" title="Sơ đồ bàn" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition">
                         <i class="fa-solid fa-table-cells-large text-xs"></i>
                     </a>
-                    <a href="{{ route('admin.restaurant.menu', $r->id) }}" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition">
+                    <a href="{{ route('admin.restaurant.menu', $r->id) }}" title="Thực đơn" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition">
                         <i class="fa-solid fa-book-open text-xs"></i>
                     </a>
-                    <a href="{{ route('admin.restaurant.edit', $r->id) }}" class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center transition">
+                    <a href="{{ route('admin.restaurant.edit', $r->id) }}" title="Sửa nhà hàng" class="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center transition">
                         <i class="fa-solid fa-pen text-xs"></i>
                     </a>
+                    <form action="{{ route('admin.restaurant.destroy', $r->id) }}" method="POST" onsubmit="return confirm('Xoá nhà hàng này?')">
+                        @csrf @method('DELETE')
+                        <button type="submit" title="Xoá" class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </form>
                 @endif
             </div>
         </td>

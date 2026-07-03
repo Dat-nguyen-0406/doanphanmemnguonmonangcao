@@ -1,4 +1,5 @@
 @extends('layouts.shop')
+@php use Illuminate\Support\Str; @endphp
 
 @section('title', 'Thanh toán đặt bàn')
 
@@ -24,7 +25,11 @@
     {{-- THÔNG TIN ĐẶT BÀN --}}
     <div style="background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,.07);overflow:hidden;margin-bottom:16px;">
         <div style="background:linear-gradient(135deg,#e50050,#c0003c);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;">
-            <img src="{{ $booking->restaurant->image_url ?? asset('images/aeon-logo.png') }}"
+            <img src="{{ $booking->restaurant->image_url
+                            ? (Str::startsWith($booking->restaurant->image_url, ['http://', 'https://'])
+                                ? $booking->restaurant->image_url
+                                : asset('storage/' . $booking->restaurant->image_url))
+                            : asset('images/aeon-logo.png') }}"
                  style="width:48px;height:48px;border-radius:10px;object-fit:cover;border:2px solid rgba(255,255,255,.3);">
             <div>
                 <h3 style="margin:0;font-size:1rem;font-weight:800;">{{ $booking->restaurant->name }}</h3>

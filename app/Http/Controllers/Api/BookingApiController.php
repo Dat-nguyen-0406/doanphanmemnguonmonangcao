@@ -44,8 +44,9 @@ class BookingApiController extends Controller
             $availableCount = $totalSeats - count($bookedSeatIds);
 
             // Format seat data
-            $seatsByRow = $allSeats->map(function ($rowSeats) use ($bookedSeatIds) {
-                return $rowSeats->map(function ($seat) use ($bookedSeatIds) {
+            // CODE ĐÃ SỬA CHUẨN
+            $seatsByRow = $allSeats->map(function ($rowSeats) use ($bookedSeatIds, $showtime) {
+                return $rowSeats->map(function ($seat) use ($bookedSeatIds, $showtime) { // <-- Thêm , $showtime vào đây
                     return [
                         'id' => $seat->id,
                         'row' => $seat->row,

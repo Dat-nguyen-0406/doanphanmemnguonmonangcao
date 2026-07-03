@@ -127,11 +127,6 @@
                                 class="block py-2 text-xs {{ request()->routeIs('admin.restaurant.menu*') ? 'text-pink-500 font-bold' : 'text-gray-500 hover:text-white' }} transition-colors">
                                     <i class="fa-solid fa-book-open mr-2 text-[10px]"></i> Thực đơn / Menu
                                 </a>
-
-                                <a href="{{ route('admin.restaurant.create') }}" 
-                                class="block py-2 text-xs {{ request()->routeIs('admin.restaurant.create') ? 'text-pink-500 font-bold' : 'text-gray-500 hover:text-white' }} transition-colors">
-                                    <i class="fa-solid fa-circle-plus mr-2 text-[10px]"></i> Thêm Nhà hàng
-                                </a>
                             </div>
                         </div>
                     @endif
@@ -153,6 +148,12 @@
                         </button>
 
                         <div x-show="openShop" x-collapse x-cloak class="pl-9 mt-1 space-y-1">
+
+                           <a href="{{ route('admin.shop.report') }}" 
+                            class="block py-2 text-xs {{ request()->routeIs('admin.shop.report') ? 'text-pink-500 font-bold' : 'text-gray-500 hover:text-white' }} transition-colors">
+                                <i class="fa-solid fa-chart-line mr-2 text-[10px]"></i> Báo cáo Doanh thu
+                            </a>
+
                             <a href="{{ route('admin.category.index') }}" 
                             class="block py-2 text-xs {{ request()->routeIs('admin.category.*') ? 'text-pink-500 font-bold' : 'text-gray-500 hover:text-white' }} transition-colors">
                                 <i class="fa-solid fa-layer-group mr-2 text-[10px]"></i> Quản lý Danh mục
@@ -163,9 +164,9 @@
                                 <i class="fa-solid fa-boxes-stacked mr-2 text-[10px]"></i> Quản lý Sản phẩm
                             </a>
 
-                            <a href="{{ route('admin.shop.report') }}" 
-                            class="block py-2 text-xs {{ request()->routeIs('admin.shop.report') ? 'text-pink-500 font-bold' : 'text-gray-500 hover:text-white' }} transition-colors">
-                                <i class="fa-solid fa-chart-line mr-2 text-[10px]"></i> Báo cáo Doanh thu
+                            <a href="{{ route('admin.shop.orders') }}" 
+                            class="block py-2 text-xs {{ request()->routeIs('admin.shop.orders') ? 'text-pink-500 font-bold' : 'text-gray-500 hover:text-white' }} transition-colors">
+                                <i class="fa-solid fa-file-invoice-dollar mr-2 text-[10px]"></i> Quản lý Đơn hàng
                             </a>
                         </div>
                     </div>

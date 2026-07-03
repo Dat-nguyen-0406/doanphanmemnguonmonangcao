@@ -109,7 +109,10 @@ public function vnpay_payment(Request $request)
         $inputData = array(
             "vnp_Version" => "2.1.0",
             "vnp_TmnCode" => $vnp_TmnCode,
-            "vnp_Amount" => intval($request->total_amount * 100), // VNPay nhân 100[cite: 9]
+            // FIX: dùng $realTotalAmount đã tính lại từ session (an toàn),
+            // KHÔNG dùng $request->total_amount vì client có thể sửa giá trị này
+            // trước khi gửi request để trả ít tiền hơn thực tế.
+            "vnp_Amount" => intval($realTotalAmount * 100),
             "vnp_Command" => "pay",
             "vnp_CreateDate" => date('YmdHis'),
             "vnp_CurrCode" => "VND",
@@ -118,7 +121,9 @@ public function vnpay_payment(Request $request)
             "vnp_OrderInfo" => "Thanh toan don hang " . $order->id,
             "vnp_OrderType" => "billpayment",
             "vnp_ReturnUrl" => $vnp_Returnurl,
-            "vnp_TxnRef" => (string)$order->id
+            // FIX: TxnRef phải unique mỗi giao dịch (không chỉ là order->id thuần)
+            // để tránh nhầm lẫn/replay nếu order được thanh toán lại nhiều lần.
+            "vnp_TxnRef" => 'SHOP_' . $order->id . '_' . time()
         );
 
         ksort($inputData);
@@ -143,13 +148,48 @@ public function vnpay_payment(Request $request)
 
     } catch (\Exception $e) {
         \DB::rollBack();
-        return redirect()->back()->with('error', 'Lỗi hệ thống: ' . $e->getMessage());
+        Log::error('Lỗi VNPay Shop: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau.');
     }
 }
     public function vnpay_return(Request $request) 
     {
-        // 1. Tìm đơn hàng dựa trên vnp_TxnRef trả về
-        $orderId = $request->vnp_TxnRef;
+        // BẢO MẬT: Verify chữ ký HMAC trước khi tin bất kỳ tham số nào từ URL.
+        // Thiếu bước này, kẻ tấn công có thể tự build URL callback giả
+        // (vnp_ResponseCode=00) để đánh dấu đơn hàng "đã thanh toán" mà
+        // không hề trả tiền qua VNPay thật.
+        $vnp_HashSecret = env('VNPAY_HASH_SECRET');
+        $vnp_SecureHash = $request->vnp_SecureHash;
+        $inputData = $request->except(['vnp_SecureHash', 'vnp_SecureHashType']);
+        ksort($inputData);
+
+        $hashData = '';
+        $i = 0;
+        foreach ($inputData as $key => $value) {
+            if ($i == 1) {
+                $hashData .= '&' . urlencode($key) . "=" . urlencode($value);
+            } else {
+                $hashData .= urlencode($key) . "=" . urlencode($value);
+                $i = 1;
+            }
+        }
+        $secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
+
+        if (!hash_equals($secureHash, (string) $vnp_SecureHash)) {
+            Log::warning('VNPay Shop: chữ ký không hợp lệ — nghi ngờ giả mạo callback. TxnRef: ' . $request->vnp_TxnRef);
+            return redirect()->route('cart.index')->with('error', 'Chữ ký giao dịch không hợp lệ!');
+        }
+
+        // 1. Tìm đơn hàng dựa trên vnp_TxnRef trả về.
+        // TxnRef có dạng SHOP_{order_id}_{timestamp} — tách lấy order_id ở giữa.
+        $txnRef = $request->vnp_TxnRef;
+        $parts  = explode('_', $txnRef);
+        $orderId = $parts[1] ?? null;
+
+        if (!$orderId || !is_numeric($orderId)) {
+            return redirect()->route('cart.index')->with('error', 'Mã giao dịch không hợp lệ!');
+        }
+
         // Nạp sẵn orderDetails và product để đảm bảo dữ liệu không bị null
         $order = Order::with('orderDetails.product')->findOrFail($orderId);
 
@@ -239,7 +279,7 @@ public function vnpay_payment(Request $request)
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Lỗi COD: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Lỗi hệ thống: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau.');
         }
     }
 

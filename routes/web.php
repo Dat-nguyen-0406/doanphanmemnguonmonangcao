@@ -32,22 +32,22 @@ Route::get('/aeon-detail/{id}', [AeonController::class, 'show'])->name('aeon.det
 Route::get('/shop', [AeonController::class, 'shop'])->name('shop.index');
 
 // API endpoints for cinema
-Route::get('/api/branches', [AeonController::class, 'apiBranches']);
-Route::get('/api/showtimes', [AeonController::class, 'apiShowtimes']);
+Route::get('/api/branches', [AeonController::class, 'apiBranches'])->middleware('throttle:60,1');
+Route::get('/api/showtimes', [AeonController::class, 'apiShowtimes'])->middleware('throttle:60,1');
 
 // =====================================================
 // LUỒNG NGƯỜI DÙNG - AUTH
 // =====================================================
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
 Route::get('/restaurants', [RestaurantController::class, 'index'])->name('restaurants.index');
 Route::get('/restaurants/{id}/book', [RestaurantController::class, 'showBookForm'])->name('restaurants.book');
 Route::post('/restaurants/{id}/book', [RestaurantController::class, 'submitBooking'])->name('restaurants.book.submit');
-Route::get('/restaurants/{id}/availability', [RestaurantController::class, 'checkAvailability'])->name('restaurants.availability');
+Route::get('/restaurants/{id}/availability', [RestaurantController::class, 'checkAvailability'])->name('restaurants.availability')->middleware('throttle:60,1');
 
 // =====================================================
 // LUỒNG NGƯỜI DÙNG - CÓ AUTH
@@ -70,6 +70,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile/orders', [OrderController::class, 'index'])->name('profile.orders.index');
     Route::get('/profile/orders/{id}', [OrderController::class, 'show'])->name('profile.orders.show');
 
+    // FIX: chuyển khối route đặt bàn nhà hàng lên TRƯỚC route wildcard
+    // '/booking/{showtime}' bên dưới — nếu không Laravel match route theo
+    // thứ tự khai báo, URL như /booking/vnpay-restaurant-return sẽ bị
+    // route wildcard cinema nuốt mất, gây lỗi 404 giả.
+    // --- ĐẶT BÀN NHÀ HÀNG (từ doanphanmem) ---
+    Route::get('/booking/payment/{id}', [RestaurantController::class, 'showPayment'])->name('booking.payment');
+    Route::post('/booking/payment/{id}/vnpay', [RestaurantController::class, 'processVnPay'])->name('booking.vnpay.process');
+    Route::get('/booking/vnpay-restaurant-return', [RestaurantController::class, 'vnpayReturn'])->name('booking.vnpay.return');
+    Route::get('/booking/success/{id}', [RestaurantController::class, 'showSuccess'])->name('booking.success');
+
     // --- ĐẶT VÉ RẠP CHIẾU PHIM (từ doanphanmem) ---
     Route::get('/showtimes/{branch}', [AeonController::class, 'showtimes'])->name('showtimes');
     Route::get('/booking/{showtime}', [AeonController::class, 'bookingForm'])->name('booking.form');
@@ -83,12 +93,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/payment/{booking}', [AeonController::class, 'paymentPage'])->name('payment.page');
     Route::get('/ticket/{booking}', [AeonController::class, 'eTicket'])->name('booking.ticket');
     Route::get('/payment/return', [PaymentController::class, 'paymentReturn'])->name('payment.return');
-
-    // --- ĐẶT BÀN NHÀ HÀNG (từ doanphanmem) ---
-    Route::get('/booking/payment/{id}', [RestaurantController::class, 'showPayment'])->name('booking.payment');
-    Route::post('/booking/payment/{id}/vnpay', [RestaurantController::class, 'processVnPay'])->name('booking.vnpay.process');
-    Route::get('/booking/vnpay-restaurant-return', [RestaurantController::class, 'vnpayReturn'])->name('booking.vnpay.return');
-    Route::get('/booking/success/{id}', [RestaurantController::class, 'showSuccess'])->name('booking.success');
 });
 
 // VNPay return callback (không cần auth)
@@ -98,7 +102,7 @@ Route::get('/payment/return', [PaymentController::class, 'paymentReturn'])->name
 // LUỒNG QUẢN TRỊ (ADMIN)
 // =====================================================
 Route::get('/admin/login', [AuthController::class, 'showAdminLogin'])->name('admin.login');
-Route::post('/admin/login', [AuthController::class, 'adminLogin']);
+Route::post('/admin/login', [AuthController::class, 'adminLogin'])->middleware('throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
@@ -208,5 +212,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
         // Quản lý đơn hàng (Mở rộng sau)
         Route::get('/orders', [PartnerShopController::class, 'orders'])->name('admin.shop.orders');
+        Route::post('/orders/{id}/status', [PartnerShopController::class, 'updateStatus'])->name('admin.shop.updateStatus');
 });
 });

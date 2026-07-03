@@ -1,5 +1,5 @@
 @extends('layouts.shop')
-
+@php use Illuminate\Support\Str; @endphp
 @section('title', 'Đặt bàn thành công')
 
 @section('content')
@@ -16,7 +16,11 @@
     <div style="background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,.07);overflow:hidden;margin-bottom:16px;">
         <div style="padding:20px 20px 0;border-bottom:1px dashed #f0f0f0;margin-bottom:0;">
             <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
-                <img src="{{ $booking->restaurant->image_url ?? asset('images/aeon-logo.png') }}"
+                <img src="{{ $booking->restaurant->image_url
+                    ? (Str::startsWith($booking->restaurant->image_url, ['http://', 'https://'])
+                        ? $booking->restaurant->image_url
+                        : asset('storage/' . $booking->restaurant->image_url))
+                    : asset('images/aeon-logo.png') }}"
                      style="width:56px;height:56px;border-radius:12px;object-fit:cover;border:1px solid #eee;">
                 <div>
                     <h2 style="margin:0 0 4px;font-size:1.1rem;font-weight:800;color:#1a1a1a;">{{ $booking->restaurant->name }}</h2>

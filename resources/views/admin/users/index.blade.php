@@ -3,6 +3,27 @@
 @section('content')
 <div class="max-w-6xl mx-auto">
     <h2 class="text-2xl font-bold text-gray-800 mb-6">Hệ thống Tài khoản & Đối tác AEON</h2>
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
+        <form action="{{ route('admin.users.index') }}" method="GET" class="flex flex-col sm:flex-row gap-3">
+            <div class="relative flex-1">
+                <input 
+                    type="text" 
+                    name="search" 
+                    value="{{ request('search') }}" 
+                    placeholder="Tìm kiếm theo Tên, ID, Email hoặc Số điện thoại..." 
+                    class="w-full text-sm border border-gray-200 rounded-lg pl-4 pr-10 py-2.5 outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
+                >
+                @if(request('search'))
+                    <a href="{{ route('admin.users.index') }}" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm">
+                        ✕ Xóa bộ lọc
+                    </a>
+                @endif
+            </div>
+            <button type="submit" class="bg-pink-600 text-white text-sm px-6 py-2.5 rounded-lg hover:bg-pink-700 transition font-bold shadow-sm shadow-pink-200">
+                Tìm kiếm
+            </button>
+        </form>
+    </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <table class="w-full text-left">
@@ -49,8 +70,9 @@
                                 <option value="4" {{ $user->role == 4 ? 'selected' : '' }}>Đối tác Online Shop</option>
                             </select>
 
-                            <!-- Nếu role = 2 (Cinema Partner), hiển thị dropdown chọn chi nhánh AEON -->
-                            <div id="branch_selector_{{ $user->id }}" class="branch-selector" style="display: {{ $user->role == 2 ? 'block' : 'none' }};">
+                            <!-- Nếu role = 2 (Cinema Partner) hoặc role = 3 (Restaurant Partner),
+                                 hiển thị dropdown chọn chi nhánh AEON -->
+                            <div id="branch_selector_{{ $user->id }}" class="branch-selector" style="display: {{ in_array($user->role, [2, 3]) ? 'block' : 'none' }};">
                                 <select name="branch_id" id="branch_{{ $user->id }}" class="text-xs border border-red-300 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-red-500">
                                     <option value="">-- Chọn chi nhánh AEON --</option>
                                     @foreach($branches as $branch)
@@ -83,14 +105,15 @@ document.querySelectorAll('.role-select').forEach(select => {
         const branchSelector = document.getElementById('branch_selector_' + userId);
         const branchInput = document.getElementById('branch_' + userId);
         
-        // Nếu chọn role = 2 (Cinema Partner), hiển thị branch selector
-        if (this.value === '2') {
+        // Nếu chọn role = 2 (Cinema Partner) hoặc role = 3 (Restaurant Partner),
+        // hiển thị branch selector
+        if (this.value === '2' || this.value === '3') {
             branchSelector.style.display = 'block';
-            branchInput.required = true; // Bắt buộc chọn branch nếu là role 2
+            branchInput.required = true; // Bắt buộc chọn branch nếu là role 2 hoặc 3
         } else {
             branchSelector.style.display = 'none';
             branchInput.required = false;
-            branchInput.value = ''; // Xóa giá trị branch nếu không phải role 2
+            branchInput.value = ''; // Xóa giá trị branch nếu không cần thiết
         }
     });
 });

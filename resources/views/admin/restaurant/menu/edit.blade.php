@@ -15,7 +15,7 @@
         </div>
         @endif
 
-        <form action="{{ route('admin.restaurant.menu.update', [$restaurant->id, $item->id]) }}" method="POST" class="space-y-5">
+        <form action="{{ route('admin.restaurant.menu.update', [$restaurant->id, $item->id]) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
             @csrf @method('PUT')
 
             <div>
@@ -49,15 +49,55 @@
                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-pink-500 outline-none resize-none">{{ old('description', $item->description) }}</textarea>
             </div>
 
+            @php
+                $itemImageSrc = $item->image_url
+                    ? (\Illuminate\Support\Str::startsWith($item->image_url, ['http://', 'https://'])
+                        ? $item->image_url
+                        : asset('storage/' . $item->image_url))
+                    : '';
+            @endphp
+
+            {{-- ẢNH - File picker (kéo-thả, giống form chỉnh sửa nhà hàng) --}}
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">URL ảnh</label>
-                <input type="url" name="image_url" value="{{ old('image_url', $item->image_url) }}" placeholder="https://..."
-                       class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-pink-500 outline-none">
-                @if($item->image_url)
-                <div class="mt-2">
-                    <img src="{{ $item->image_url }}" style="height:80px;border-radius:10px;object-fit:cover;" onerror="this.style.display='none'">
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Ảnh món ăn</label>
+
+                <div id="image-drop-zone"
+                     class="relative w-full border-2 border-dashed rounded-xl
+                            flex flex-col items-center justify-center gap-2
+                            hover:border-pink-400 hover:bg-pink-50 transition-all
+                            {{ $itemImageSrc ? 'border-gray-200' : 'border-gray-300' }}"
+                     style="min-height: 160px;">
+
+                    <img id="image-preview"
+                         src="{{ $itemImageSrc }}"
+                         alt="Preview"
+                         class="{{ $itemImageSrc ? '' : 'hidden' }} w-full h-40 object-cover rounded-xl">
+
+                    <div id="image-placeholder"
+                         onclick="document.getElementById('image_file').click()"
+                         class="flex flex-col items-center gap-2 py-6 cursor-pointer w-full {{ $itemImageSrc ? 'hidden' : '' }}">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-300"></i>
+                        <p class="text-sm font-bold text-gray-400">Nhấn để chọn ảnh</p>
+                        <p class="text-xs text-gray-300">JPG, PNG · Tối đa 5MB</p>
+                    </div>
+
+                    <button type="button" id="image-change-btn"
+                            onclick="document.getElementById('image_file').click()"
+                            class="{{ $itemImageSrc ? '' : 'hidden' }} absolute bottom-2 right-2 bg-white/90 hover:bg-white text-gray-600 text-xs font-bold px-3 py-1.5 rounded-lg shadow border border-gray-200 transition">
+                        <i class="fa-solid fa-pen mr-1"></i> Đổi ảnh
+                    </button>
                 </div>
-                @endif
+
+                <input type="file" id="image_file" name="image"
+                       accept="image/jpeg,image/png,image/jpg,image/webp" class="hidden">
+
+                <p id="image-filename" class="text-xs text-gray-400 mt-1.5 hidden">
+                    <i class="fa-solid fa-paperclip mr-1"></i><span></span>
+                </p>
+
+                @error('image')
+                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="flex items-center gap-3 py-1">

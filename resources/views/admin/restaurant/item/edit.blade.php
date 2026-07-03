@@ -12,8 +12,7 @@
               enctype="multipart/form-data" class="space-y-5">
             @csrf @method('PUT')
 
-            @if($errors->any())
-            <div class="bg-red-50 text-red-700 rounded-xl px-4 py-3 text-sm">
+            @if($errors->any())\n            <div class="bg-red-50 text-red-700 rounded-xl px-4 py-3 text-sm">
                 @foreach($errors->all() as $e)<p>• {{ $e }}</p>@endforeach
             </div>
             @endif
@@ -41,38 +40,38 @@
             {{-- Loại ẩm thực --}}
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Loại hình ẩm thực</label>
-                <input type="text" name="cuisine_type" value="{{ old('cuisine_type', $restaurant->cuisine_type) }}"
-                       placeholder="VD: Nhật Bản, Lẩu, BBQ, Hàn Quốc..."
+                <input type="text" name="cuisine_type" value="{{ old('cuisine_type', $restaurant->cuisine_type) }}" placeholder="Ví dụ: Lẩu nướng, Món Nhật, Fastfood..."
                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-pink-500 outline-none">
             </div>
 
             {{-- Mô tả --}}
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mô tả</label>
-                <textarea name="description" rows="3"
-                          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-pink-500 outline-none resize-none">{{ old('description', $restaurant->description) }}</textarea>
+                <textarea name="description" rows="4"
+                          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm focus:border-pink-500 outline-none">{{ old('description', $restaurant->description) }}</textarea>
             </div>
 
-            {{-- ẢNH - File picker --}}
+            {{-- ẢNH - File picker (ĐÃ FIX: loại bỏ onclick tại thẻ cha) --}}
             <div>
                 <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Ảnh đại diện</label>
 
                 <div id="image-drop-zone"
-                     onclick="document.getElementById('image_file').click()"
                      class="relative w-full border-2 border-dashed rounded-xl
-                            flex flex-col items-center justify-center gap-2 cursor-pointer
+                            flex flex-col items-center justify-center gap-2
                             hover:border-pink-400 hover:bg-pink-50 transition-all
                             {{ $restaurant->image_url ? 'border-gray-200' : 'border-gray-300' }}"
                      style="min-height: 160px;">
 
-                    {{-- Preview: ảnh hiện tại hoặc ảnh mới chọn --}}
+                    {{-- Khối hiển thị ảnh preview cũ/mới --}}
                     <img id="image-preview"
-                         src="{{ $restaurant->image_url ?? '' }}"
+                         src="{{ $restaurant->image_url ? (Str::startsWith($restaurant->image_url, ['http://', 'https://']) ? $restaurant->image_url : asset('storage/' . $restaurant->image_url)) : '' }}"
                          alt="Preview"
                          class="{{ $restaurant->image_url ? '' : 'hidden' }} w-full h-40 object-cover rounded-xl">
 
-                    {{-- Placeholder (ẩn nếu đã có ảnh) --}}
-                    <div id="image-placeholder" class="flex flex-col items-center gap-2 py-6 {{ $restaurant->image_url ? 'hidden' : '' }}">
+                    {{-- Hộp thông báo chọn ảnh (Chỉ kích hoạt onclick khi vùng này trống) --}}
+                    <div id="image-placeholder" 
+                         onclick="document.getElementById('image_file').click()"
+                         class="flex flex-col items-center gap-2 py-6 cursor-pointer w-full {{ $restaurant->image_url ? 'hidden' : '' }}">
                         <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-300"></i>
                         <p class="text-sm font-bold text-gray-400">Nhấn để chọn ảnh</p>
                         <p class="text-xs text-gray-300">JPG, PNG · Tối đa 5MB</p>
@@ -80,6 +79,7 @@
 
                     {{-- Nút đổi ảnh --}}
                     <button type="button" id="image-change-btn"
+                            onclick="document.getElementById('image_file').click()"
                             class="{{ $restaurant->image_url ? '' : 'hidden' }} absolute bottom-2 right-2
                                    bg-white/90 hover:bg-white text-gray-600 text-xs font-bold
                                    px-3 py-1.5 rounded-lg shadow border border-gray-200 transition">
@@ -108,18 +108,25 @@
                 @enderror
             </div>
 
-            {{-- Trạng thái --}}
-            <div class="flex items-center gap-3">
+            {{-- Trạng thái hoạt động --}}
+            <div class="flex items-center gap-2 pt-2">
                 <input type="checkbox" name="is_active" id="is_active" value="1"
-                       {{ $restaurant->is_active ? 'checked' : '' }}
-                       class="w-4 h-4 accent-pink-600">
-                <label for="is_active" class="text-sm text-gray-700">Đang hoạt động</label>
+                       {{ old('is_active', $restaurant->is_active) ? 'checked' : '' }}
+                       class="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500">
+                <label for="is_active" class="text-sm font-bold text-gray-700 cursor-pointer select-none">Đang hoạt động</label>
             </div>
 
-            <button type="submit"
-                    class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3.5 rounded-xl text-sm transition">
-                Cập nhật nhà hàng
-            </button>
+            {{-- HÀNH ĐỘNG --}}
+            <div class="pt-4 flex items-center justify-end gap-3 border-t border-gray-100">
+                <a href="{{ route('admin.restaurant.index') }}"
+                   class="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-50 transition">
+                    Hủy
+                </a>
+                <button type="submit"
+                        class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-pink-600 hover:bg-pink-700 shadow-sm shadow-pink-100 transition">
+                    Cập nhật nhà hàng
+                </button>
+            </div>
         </form>
     </div>
 </div>
@@ -138,11 +145,7 @@ input.addEventListener('change', function () {
     showPreview(file);
 });
 
-changeBtn.addEventListener('click', function (e) {
-    e.stopPropagation();
-    input.click();
-});
-
+// Drag & drop
 dropZone.addEventListener('dragover', function (e) {
     e.preventDefault();
     this.classList.add('border-pink-400', 'bg-pink-50');
